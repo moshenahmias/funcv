@@ -56,14 +56,22 @@ func (c *BoolConverter) Convert(arg string) (interface{}, error) {
 	}
 
 	if insensitive {
+		if strings.EqualFold(arg, "true") {
+			return true, nil
+		}
+
 		if strings.EqualFold(arg, "false") {
 			return false, nil
 		}
 	} else {
+		if arg == "true" {
+			return true, nil
+		}
+
 		if arg == "false" {
 			return false, nil
 		}
 	}
 
-	return true, nil
+	return nil, fmt.Errorf("funcv: cannot convert %s to boolean", arg)
 }

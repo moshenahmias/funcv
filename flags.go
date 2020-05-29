@@ -7,7 +7,7 @@ import (
 )
 
 var (
-	flagRegex       = regexp.MustCompile("^-([a-zA-Z])$|^--([a-zA-Z][a-zA-Z]+)$")
+	flagRegex       = regexp.MustCompile(`^-([a-zA-Z])$|^--([a-zA-Z][a-zA-Z]+)$`)
 	isValidFlagName = regexp.MustCompile(`^[a-zA-Z]+$`).MatchString
 )
 
@@ -40,6 +40,7 @@ func extractFlagName(arg string) string {
 type flagsBuilder struct {
 	converters map[string]Converter
 	values     map[string]interface{}
+	defaults   map[string]interface{}
 	flags      []string
 	desc       []string
 	command    *command
@@ -77,6 +78,10 @@ func (b *flagsBuilder) Extract(args []string) ([]string, []interface{}, error) {
 		if _, found := b.values[name]; !found {
 			params, err := b.toParams()
 			return args, params, err
+		}
+
+		if def, found := b.defaults[name]; found {
+			b.values[name] = def
 		}
 
 		args = args[1:]
@@ -165,17 +170,18 @@ func (b *flagsBuilder) AddBoolFlag(name, desc string) FlagsBuilder {
 	b.desc = append(b.desc, desc)
 	b.flags = append(b.flags, name)
 	b.values[name] = false
+	b.defaults[name] = true
 	b.converters[name] = &BoolConverter{true}
 	return b
 }
 
-func (b *flagsBuilder) AddConst(text string, insensitive bool) Builder {
+func (b *flagsBuilder) AddConstant(text string, insensitive bool) Builder {
 	if b.command.err != nil {
 		return b
 	}
 
 	b.command.args = append(b.command.args, b)
-	return b.command.AddConst(text, insensitive)
+	return b.command.AddConstant(text, insensitive)
 }
 
 func (b *flagsBuilder) AddStrVar(name, desc string) Builder {
@@ -196,22 +202,22 @@ func (b *flagsBuilder) AddIntVar(name string, base int, desc string) Builder {
 	return b.command.AddIntVar(name, base, desc)
 }
 
-func (b *flagsBuilder) AddDefStrVar(name, def, desc string) DefultedVariablesBuilder {
+func (b *flagsBuilder) AddStrVarWithDefault(name, def, desc string) DefultedVariablesBuilder {
 	if b.command.err != nil {
 		return b
 	}
 
 	b.command.args = append(b.command.args, b)
-	return b.command.AddDefStrVar(name, def, desc)
+	return b.command.AddStrVarWithDefault(name, def, desc)
 }
 
-func (b *flagsBuilder) AddDefIntVar(name string, def, base int, desc string) DefultedVariablesBuilder {
+func (b *flagsBuilder) AddIntVarWithDefault(name string, def, base int, desc string) DefultedVariablesBuilder {
 	if b.command.err != nil {
 		return b
 	}
 
 	b.command.args = append(b.command.args, b)
-	return b.command.AddDefIntVar(name, def, base, desc)
+	return b.command.AddIntVarWithDefault(name, def, base, desc)
 }
 
 func (b *flagsBuilder) AddArg(arg Arg) Builder {
@@ -222,9 +228,19 @@ func (b *flagsBuilder) AddArg(arg Arg) Builder {
 	return b.command.AddArg(arg)
 }
 
-func (b *flagsBuilder) Create() Command {
+func (b *flagsBuilder) Compile() (Command, error) {
 	b.command.args = append(b.command.args, b)
-	return b.command.Create()
+	return b.command.Compile()
+}
+
+func (b *flagsBuilder) MustCompile() Command {
+	b.command.args = append(b.command.args, b)
+	return b.command.MustCompile()
+}
+
+func (b *flagsBuilder) ToGroup(grp Group, fn interface{}) Command {
+	b.command.args = append(b.command.args, b)
+	return b.command.ToGroup(grp, fn)
 }
 
 func (b *flagsBuilder) Description() string {
@@ -235,7 +251,8 @@ func (b *flagsBuilder) Description() string {
 		sb.WriteString(fmt.Sprintf("%s\t%s (default: %v)", toFlag(name), b.desc[i], def))
 
 		if i+1 < len(b.flags) {
-			sb.WriteString("\r\n\t")
+			sb.WriteString(newline)
+			sb.WriteString("\t")
 		}
 	}
 

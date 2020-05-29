@@ -13,12 +13,12 @@ var (
 )
 
 type DefultedVariablesAdder interface {
-	AddDefStrVar(name, def, desc string) DefultedVariablesBuilder
-	AddDefIntVar(name string, def, base int, desc string) DefultedVariablesBuilder
+	AddStrVarWithDefault(name, def, desc string) DefultedVariablesBuilder
+	AddIntVarWithDefault(name string, def, base int, desc string) DefultedVariablesBuilder
 }
 
 type ConstantAdder interface {
-	AddConst(text string, insensitive bool) Builder
+	AddConstant(text string, insensitive bool) Builder
 }
 
 type VariablesAdder interface {
@@ -32,9 +32,13 @@ type FlagsAdder interface {
 	AddBoolFlag(name, desc string) FlagsBuilder
 }
 
+type ArgAdder interface {
+	AddArg(arg Arg) Builder
+}
+
 type DefultedVariablesBuilder interface {
 	DefultedVariablesAdder
-	CommandCreator
+	Compiler
 }
 
 type FlagsBuilder interface {
@@ -42,20 +46,22 @@ type FlagsBuilder interface {
 	ConstantAdder
 	VariablesAdder
 	DefultedVariablesAdder
-	CommandCreator
+	Compiler
 }
 
 type Builder interface {
-	AddArg(arg Arg) Builder
+	ArgAdder
 	FlagsAdder
 	ConstantAdder
 	VariablesAdder
 	DefultedVariablesAdder
-	CommandCreator
+	Compiler
 }
 
-type CommandCreator interface {
-	Create() Command
+type Compiler interface {
+	Compile() (Command, error)
+	MustCompile() Command
+	ToGroup(grp Group, fn interface{}) Command
 }
 
 type Command interface {
@@ -63,8 +69,10 @@ type Command interface {
 	fmt.Stringer
 }
 
-func Build(exe, desc string) Builder {
-	return &command{exe: exe, desc: desc}
+type Group interface {
+	Add(cmd Command, fn interface{}) Group
+	Execute(args []string) int
+	fmt.Stringer
 }
 
 type Arg interface {
@@ -75,4 +83,12 @@ type Arg interface {
 
 type Converter interface {
 	Convert(arg string) (interface{}, error)
+}
+
+func NewCommand(desc string) Builder {
+	return &command{desc: desc}
+}
+
+func NewGroup() Group {
+	return new(group)
 }

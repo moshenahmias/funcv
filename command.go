@@ -8,14 +8,14 @@ import (
 )
 
 var (
-	isValidVarName = regexp.MustCompile(`^[0-9a-zA-Z\-_]+$`).MatchString
+	isValidVarName   = regexp.MustCompile(`^[0-9a-zA-Z\-_]+$`).MatchString
+	isValidConstName = regexp.MustCompile(`[^-\s]`).MatchString
 )
 
 type command struct {
 	args   []Arg
 	err    error
 	params []interface{}
-	exe    string
 	desc   string
 }
 
@@ -24,12 +24,12 @@ func (c *command) AddArg(arg Arg) Builder {
 	return c
 }
 
-func (c *command) AddConst(text string, insensitive bool) Builder {
+func (c *command) AddConstant(text string, insensitive bool) Builder {
 	if c.err != nil {
 		return c
 	}
 
-	if text == "" {
+	if !isValidConstName(text) {
 		c.err = fmt.Errorf("funcv: invalid constant [arg %d]", len(c.args))
 		return c
 	}
@@ -68,7 +68,7 @@ func (c *command) AddIntVar(name string, base int, desc string) Builder {
 	return c.AddArg(&intVar{name: name, desc: desc, base: base})
 }
 
-func (c *command) AddDefStrVar(name, def, desc string) DefultedVariablesBuilder {
+func (c *command) AddStrVarWithDefault(name, def, desc string) DefultedVariablesBuilder {
 	if c.err != nil {
 		return c
 	}
@@ -82,7 +82,7 @@ func (c *command) AddDefStrVar(name, def, desc string) DefultedVariablesBuilder 
 	return c
 }
 
-func (c *command) AddDefIntVar(name string, def, base int, desc string) DefultedVariablesBuilder {
+func (c *command) AddIntVarWithDefault(name string, def, base int, desc string) DefultedVariablesBuilder {
 	if c.err != nil {
 		return c
 	}
@@ -109,6 +109,7 @@ func (c *command) AddStrFlag(name, def, desc string) FlagsBuilder {
 	fb := &flagsBuilder{
 		converters: make(map[string]Converter),
 		values:     make(map[string]interface{}),
+		defaults:   make(map[string]interface{}),
 		command:    c}
 
 	return fb.AddStrFlag(name, def, desc)
@@ -122,6 +123,7 @@ func (c *command) AddIntFlag(name string, def, base int, desc string) FlagsBuild
 	fb := &flagsBuilder{
 		converters: make(map[string]Converter),
 		values:     make(map[string]interface{}),
+		defaults:   make(map[string]interface{}),
 		command:    c}
 
 	return fb.AddIntFlag(name, def, base, desc)
@@ -135,21 +137,38 @@ func (c *command) AddBoolFlag(name, desc string) FlagsBuilder {
 	fb := &flagsBuilder{
 		converters: make(map[string]Converter),
 		values:     make(map[string]interface{}),
+		defaults:   make(map[string]interface{}),
 		command:    c}
 
 	return fb.AddBoolFlag(name, desc)
 }
 
-func (c *command) Create() Command {
+func (c *command) Compile() (Command, error) {
 	if c.err != nil {
-		return c
+		return nil, c.err
 	}
 
 	if len(c.args) == 0 {
-		c.err = ErrNoArguments
+		return nil, ErrNoArguments
 	}
 
-	return c
+	return c, nil
+}
+
+func (c *command) MustCompile() Command {
+	cmd, err := c.Compile()
+
+	if err != nil {
+		panic(err)
+	}
+
+	return cmd
+}
+
+func (c *command) ToGroup(grp Group, fn interface{}) Command {
+	cmd := c.MustCompile()
+	grp.Add(cmd, fn)
+	return cmd
 }
 
 func (c *command) Execute(args []string, fn interface{}) error {
@@ -206,7 +225,7 @@ func (c *command) Execute(args []string, fn interface{}) error {
 
 func (c *command) String() string {
 	if len(c.args) == 0 {
-		return c.exe
+		return c.desc
 	}
 
 	var sb strings.Builder
@@ -215,17 +234,14 @@ func (c *command) String() string {
 		sb.WriteString(fmt.Sprintf("%s: ", c.desc))
 	}
 
-	if c.exe != "" {
-		sb.WriteString(fmt.Sprintf("%s ", c.exe))
-	}
-
 	for i, arg := range c.args {
 		sb.WriteString(arg.String())
 
 		if i+1 < len(c.args) {
 			sb.WriteString(" ")
 		} else {
-			sb.WriteString("\r\n\r\n")
+			sb.WriteString(newline)
+			sb.WriteString(newline)
 		}
 	}
 
@@ -237,7 +253,7 @@ func (c *command) String() string {
 			sb.WriteString(fmt.Sprintf("\t%s", desc))
 
 			if i+1 < len(c.args) {
-				sb.WriteString("\r\n")
+				sb.WriteString(newline)
 			}
 		}
 
