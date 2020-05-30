@@ -82,6 +82,8 @@ func (b *flagsBuilder) Extract(args []string) ([]string, []interface{}, error) {
 
 		if def, found := b.defaults[name]; found {
 			b.values[name] = def
+		} else {
+			delete(b.values, name)
 		}
 
 		args = args[1:]
@@ -238,7 +240,7 @@ func (b *flagsBuilder) MustCompile() Command {
 	return b.command.MustCompile()
 }
 
-func (b *flagsBuilder) ToGroup(grp Group, fn interface{}) Command {
+func (b *flagsBuilder) ToGroup(grp Group, fn interface{}) error {
 	b.command.args = append(b.command.args, b)
 	return b.command.ToGroup(grp, fn)
 }

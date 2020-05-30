@@ -165,10 +165,15 @@ func (c *command) MustCompile() Command {
 	return cmd
 }
 
-func (c *command) ToGroup(grp Group, fn interface{}) Command {
-	cmd := c.MustCompile()
+func (c *command) ToGroup(grp Group, fn interface{}) error {
+	cmd, err := c.Compile()
+
+	if err != nil {
+		return err
+	}
+
 	grp.Add(cmd, fn)
-	return cmd
+	return nil
 }
 
 func (c *command) Execute(args []string, fn interface{}) error {
@@ -194,6 +199,10 @@ func (c *command) Execute(args []string, fn interface{}) error {
 
 	if len(args) > 0 {
 		return ErrUnknownArgs
+	}
+
+	if fn == nil {
+		return nil
 	}
 
 	var in []reflect.Value
