@@ -19,7 +19,7 @@ func main() {
 		fmt.Println("deleting", name, "...")
 		// ...
 	}); err != nil {
-        fmt.Fprintln(os.Stderr, "invalid command:", strings.Join(os.Args[1:], " "))
+		fmt.Fprintln(os.Stderr, "invalid command:", strings.Join(os.Args[1:], " "))
 	}
 }
 ```
@@ -64,15 +64,15 @@ It is possible to group different commands together using a `funcv.Group` and te
 func main() {
 	grp := funcv.NewGroup()
 
-    err := funcv.NewCommand("delete a file").
+	err := funcv.NewCommand("delete a file").
 		AddConstant("example", false).
 		AddConstant("delete", false).
 		AddBoolFlag("r", "move to recycle bin").
 		AddStrVar("filename", "file to delete").
 		ToGroup(grp, func(recycle bool, name string) {
-            // the count, order and type of params must match the count, order
-            // and type of flags and variables in the command (excluding constants)	
-            if recycle {
+			// the count, order and type of params must match the count, order
+			// and type of flags and variables in the command (excluding constants)	
+			if recycle {
 				fmt.Println("recycling", name, "...")
 			} else {
 				fmt.Println("deleting", name, "...")
@@ -88,9 +88,9 @@ func main() {
 		AddConstant("example", false).
 		AddConstant("help", false).
 		ToGroup(grp, func() {
-            // groups, commands and arguments implement io.WriterTo
-            // and will write their informative usage text into the
-            // writer given to WriteTo(io.Writer)
+			// groups, commands and arguments implement io.WriterTo
+			// and will write their informative usage text into the
+			// writer given to WriteTo(io.Writer)
 			w := new(tabwriter.Writer)
 			w.Init(os.Stdout, 18, 8, 0, '\t', 0)
 			defer w.Flush()
@@ -103,8 +103,8 @@ func main() {
 		panic(err)
 	}
 
-    // test against all commands in grp
-    // returns the number of executed commands
+	// test against all commands in grp
+	// returns the number of executed commands
 	if grp.Execute(append([]string{"example"}, os.Args[1:]...)) == 0 {
 		fmt.Fprintln(os.Stderr, "invalid command:", strings.Join(os.Args[1:], " "))
 	}
