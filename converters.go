@@ -6,8 +6,10 @@ import (
 	"strings"
 )
 
+// StringConverter is used to convert string arguments to strings
 type StringConverter struct{}
 
+// Convert returns the given arg as-is
 func (*StringConverter) Convert(arg string) (interface{}, error) {
 	if arg == "" {
 		return nil, ErrInvalidValue
@@ -16,10 +18,13 @@ func (*StringConverter) Convert(arg string) (interface{}, error) {
 	return arg, nil
 }
 
+// IntegerConverter is used to convert string represented integer
+// arguments to integers, the default base is decimal
 type IntegerConverter struct {
-	base int
+	Base int // input base (0 or less defaults to decimal)
 }
 
+// Convert the given argument to integer
 func (c *IntegerConverter) Convert(arg string) (interface{}, error) {
 	if arg == "" {
 		return nil, ErrInvalidValue
@@ -27,8 +32,8 @@ func (c *IntegerConverter) Convert(arg string) (interface{}, error) {
 
 	base := 10
 
-	if c != nil && c.base > 0 {
-		base = c.base
+	if c != nil && c.Base > 0 {
+		base = c.Base
 	}
 
 	i, err := strconv.ParseInt(arg, base, 64)
@@ -40,10 +45,14 @@ func (c *IntegerConverter) Convert(arg string) (interface{}, error) {
 	return i, nil
 }
 
+// BoolConverter is used to convert string represented integer
+// arguments to integers, "true" is converted to true, "false"
+// is converted to false, it uses sensitive compare as default
 type BoolConverter struct {
-	insensitive bool
+	Insensitive bool // how to compare the input
 }
 
+// Convert the given argument to boolean
 func (c *BoolConverter) Convert(arg string) (interface{}, error) {
 	if arg == "" {
 		return true, nil
@@ -52,7 +61,7 @@ func (c *BoolConverter) Convert(arg string) (interface{}, error) {
 	insensitive := false
 
 	if c != nil {
-		insensitive = c.insensitive
+		insensitive = c.Insensitive
 	}
 
 	if insensitive {

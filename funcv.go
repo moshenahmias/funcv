@@ -1,8 +1,17 @@
+// funcv helps you create CLI tools with Go. It offers a different
+// approach for dealing with command line arguments and flags.
+// funcv supplies an easy to use command builder, you use that builder
+// to build your set of commands, each such command can be tested against
+// a slice of string arguments, if the arguments are compatible with the
+// command, a given action function is called, the parameters for that
+// function are the extracted and parsed variables and flags input values.
+
 package funcv
 
 import (
 	"errors"
 	"fmt"
+	"io"
 )
 
 var (
@@ -105,14 +114,14 @@ type Compiler interface {
 	// MustCompile is the same as Compile
 	// but will panic if the compilation failed
 	MustCompile() Command
-	// ToGroup compiles and adds the Command and
+	// ToGroup compiles and adds the command and
 	// the given action function to a group, returns
 	// an error if the compilation failed
 	ToGroup(grp Group, fn interface{}) error
 }
 
 // Command represents a textual command that can be later
-// be tested against a list of text arguments and an action
+// tested against a list of text arguments with an action
 // function to run
 type Command interface {
 	// Execute tests the supplied arguments against the
@@ -122,7 +131,7 @@ type Command interface {
 	// need to be compatible with the command's arguments or else
 	// a non-nil error is returned
 	Execute(args []string, fn interface{}) error
-	fmt.Stringer
+	io.WriterTo
 }
 
 // Group ties together multiple commands
@@ -136,33 +145,32 @@ type Group interface {
 	// the number of called functions is returned, to be called, every
 	// function needs to be compatible with the command's arguments
 	Execute(args []string) int
-	fmt.Stringer
+	io.WriterTo
 }
 
+// Arg represents a command argument
 type Arg interface {
 	// Extract an argument(s) from the list of arguments
 	// and return the rest of the arguments and extracted
 	// parameters, returns a non-nil error if the extraction
 	// failed for any reason
 	Extract(args []string) ([]string, []interface{}, error)
-	// Description of the argument
-	Description() string
+	io.WriterTo
 	fmt.Stringer
 }
 
 // Converter of text argument to typed value
 type Converter interface {
-	// Convert the givan arg to a value
 	Convert(arg string) (interface{}, error)
 }
 
 // NewCommand returns a builder that is used for
-// building a new Command
+// building a new command
 func NewCommand(desc string) Builder {
 	return &command{desc: desc}
 }
 
-// NewGroup returns a new empty Group
+// NewGroup returns a new empty group
 func NewGroup() Group {
 	return new(group)
 }

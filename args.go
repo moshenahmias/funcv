@@ -2,6 +2,7 @@ package funcv
 
 import (
 	"fmt"
+	"io"
 	"strings"
 )
 
@@ -28,8 +29,8 @@ func (c *constant) Extract(args []string) ([]string, []interface{}, error) {
 	return args[1:], nil, nil
 }
 
-func (c *constant) Description() string {
-	return ""
+func (*constant) WriteTo(w io.Writer) (int64, error) {
+	return 0, nil
 }
 
 func (c *constant) String() string {
@@ -55,8 +56,9 @@ func (*strVar) Extract(args []string) ([]string, []interface{}, error) {
 	return args[1:], []interface{}{s}, nil
 }
 
-func (v *strVar) Description() string {
-	return fmt.Sprintf("%s\t%s", v.name, v.desc)
+func (v *strVar) WriteTo(w io.Writer) (int64, error) {
+	n, err := fmt.Fprintf(w, "\n\t%s\t%s", v.name, v.desc)
+	return int64(n), err
 }
 
 func (v *strVar) String() string {
@@ -83,8 +85,9 @@ func (v *intVar) Extract(args []string) ([]string, []interface{}, error) {
 	return args[1:], []interface{}{i}, nil
 }
 
-func (v *intVar) Description() string {
-	return fmt.Sprintf("%s\t%s (base: %d)", v.name, v.desc, v.base)
+func (v *intVar) WriteTo(w io.Writer) (int64, error) {
+	n, err := fmt.Fprintf(w, "\n\t%s\t%s (base: %d)", v.name, v.desc, v.base)
+	return int64(n), err
 }
 
 func (v *intVar) String() string {
@@ -111,8 +114,9 @@ func (v *defStrVar) Extract(args []string) ([]string, []interface{}, error) {
 	return args[1:], []interface{}{s}, nil
 }
 
-func (v *defStrVar) Description() string {
-	return fmt.Sprintf("%s\t%s (default: %s)", v.name, v.desc, v.def)
+func (v *defStrVar) WriteTo(w io.Writer) (int64, error) {
+	n, err := fmt.Fprintf(w, "\n\t%s\t%s (default: %s)", v.name, v.desc, v.def)
+	return int64(n), err
 }
 
 func (v *defStrVar) String() string {
@@ -140,8 +144,9 @@ func (v *defIntVar) Extract(args []string) ([]string, []interface{}, error) {
 	return args[1:], []interface{}{i}, nil
 }
 
-func (v *defIntVar) Description() string {
-	return fmt.Sprintf("%s\t%s (base: %d, default: %d)", v.name, v.desc, v.base, v.def)
+func (v *defIntVar) WriteTo(w io.Writer) (int64, error) {
+	n, err := fmt.Fprintf(w, "\n\t%s\t%s (base: %d, default: %d)", v.name, v.desc, v.base, v.def)
+	return int64(n), err
 }
 
 func (v *defIntVar) String() string {

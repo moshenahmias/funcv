@@ -1,20 +1,21 @@
 package funcv
 
 import (
-	"strings"
+	"fmt"
+	"io"
 )
 
-type pair struct {
+type bindedCommand struct {
 	cmd Command
 	fn  interface{}
 }
 
 type group struct {
-	commands []pair
+	commands []bindedCommand
 }
 
 func (g *group) Add(cmd Command, fn interface{}) Group {
-	g.commands = append(g.commands, pair{cmd, fn})
+	g.commands = append(g.commands, bindedCommand{cmd, fn})
 	return g
 }
 
@@ -30,21 +31,24 @@ func (g *group) Execute(args []string) int {
 	return n
 }
 
-func (g *group) String() string {
-	if len(g.commands) == 0 {
-		return ""
-	}
-
-	var sb strings.Builder
+func (g *group) WriteTo(w io.Writer) (int64, error) {
+	var written int64
 
 	for i, p := range g.commands {
-		sb.WriteString(p.cmd.String())
+		if n, err := p.cmd.WriteTo(w); err == nil {
+			written += n
+		} else {
+			return written + n, err
+		}
 
 		if i+1 < len(g.commands) {
-			sb.WriteString(newline)
-			sb.WriteString(newline)
+			if n, err := fmt.Fprint(w, "\n\n"); err == nil {
+				written += int64(n)
+			} else {
+				return written + int64(n), err
+			}
 		}
 	}
 
-	return sb.String()
+	return written, nil
 }

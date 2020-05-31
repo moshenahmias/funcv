@@ -2,9 +2,9 @@ package funcv
 
 import (
 	"fmt"
+	"io"
 	"reflect"
 	"regexp"
-	"strings"
 )
 
 var (
@@ -109,6 +109,7 @@ func (c *command) AddStrFlag(name, def, desc string) FlagsBuilder {
 	fb := &flagsBuilder{
 		converters: make(map[string]Converter),
 		values:     make(map[string]interface{}),
+		founddefs:  make(map[string]interface{}),
 		defaults:   make(map[string]interface{}),
 		command:    c}
 
@@ -123,6 +124,7 @@ func (c *command) AddIntFlag(name string, def, base int, desc string) FlagsBuild
 	fb := &flagsBuilder{
 		converters: make(map[string]Converter),
 		values:     make(map[string]interface{}),
+		founddefs:  make(map[string]interface{}),
 		defaults:   make(map[string]interface{}),
 		command:    c}
 
@@ -137,6 +139,7 @@ func (c *command) AddBoolFlag(name, desc string) FlagsBuilder {
 	fb := &flagsBuilder{
 		converters: make(map[string]Converter),
 		values:     make(map[string]interface{}),
+		founddefs:  make(map[string]interface{}),
 		defaults:   make(map[string]interface{}),
 		command:    c}
 
@@ -232,41 +235,61 @@ func (c *command) Execute(args []string, fn interface{}) error {
 	return nil
 }
 
-func (c *command) String() string {
-	if len(c.args) == 0 {
-		return c.desc
-	}
+func (c *command) WriteTo(w io.Writer) (int64, error) {
+	var written int64
 
-	var sb strings.Builder
+	if len(c.args) == 0 {
+		return written, nil
+	}
 
 	if c.desc != "" {
-		sb.WriteString(fmt.Sprintf("%s: ", c.desc))
-	}
-
-	for i, arg := range c.args {
-		sb.WriteString(arg.String())
-
-		if i+1 < len(c.args) {
-			sb.WriteString(" ")
+		if n, err := fmt.Fprintf(w, "%s:\t", c.desc); err == nil {
+			written += int64(n)
 		} else {
-			sb.WriteString(newline)
-			sb.WriteString(newline)
+			return written + int64(n), err
 		}
+	} else if n, err := fmt.Fprint(w, "\t"); err == nil {
+		written += int64(n)
+	} else {
+		return written + int64(n), err
 	}
 
 	for i, arg := range c.args {
 
-		desc := arg.Description()
-
-		if desc != "" {
-			sb.WriteString(fmt.Sprintf("\t%s", desc))
-
-			if i+1 < len(c.args) {
-				sb.WriteString(newline)
+		if i == 0 {
+			if n, err := fmt.Fprint(w, "> "); err == nil {
+				written += int64(n)
+			} else {
+				return written + int64(n), err
 			}
 		}
 
+		if n, err := fmt.Fprintf(w, "%s", arg.String()); err == nil {
+			written += int64(n)
+		} else {
+			return written + int64(n), err
+		}
+
+		if i+1 < len(c.args) {
+			if n, err := fmt.Fprint(w, " "); err == nil {
+				written += int64(n)
+			} else {
+				return written + int64(n), err
+			}
+		} else if n, err := fmt.Fprint(w, "\n"); err == nil {
+			written += int64(n)
+		} else {
+			return written + int64(n), err
+		}
 	}
 
-	return sb.String()
+	for _, arg := range c.args {
+		if n, err := arg.WriteTo(w); err == nil {
+			written += n
+		} else {
+			return written + n, err
+		}
+	}
+
+	return written, nil
 }

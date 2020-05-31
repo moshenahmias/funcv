@@ -2,6 +2,7 @@ package funcv
 
 import (
 	"fmt"
+	"io"
 	"regexp"
 	"strings"
 )
@@ -40,6 +41,7 @@ func extractFlagName(arg string) string {
 type flagsBuilder struct {
 	converters map[string]Converter
 	values     map[string]interface{}
+	founddefs  map[string]interface{}
 	defaults   map[string]interface{}
 	flags      []string
 	desc       []string
@@ -80,7 +82,7 @@ func (b *flagsBuilder) Extract(args []string) ([]string, []interface{}, error) {
 			return args, params, err
 		}
 
-		if def, found := b.defaults[name]; found {
+		if def, found := b.founddefs[name]; found {
 			b.values[name] = def
 		} else {
 			delete(b.values, name)
@@ -133,6 +135,7 @@ func (b *flagsBuilder) AddStrFlag(name, def, desc string) FlagsBuilder {
 	b.desc = append(b.desc, desc)
 	b.flags = append(b.flags, name)
 	b.values[name] = def
+	b.defaults[name] = def
 	b.converters[name] = new(StringConverter)
 	return b
 }
@@ -155,6 +158,7 @@ func (b *flagsBuilder) AddIntFlag(name string, def, base int, desc string) Flags
 	b.desc = append(b.desc, desc)
 	b.flags = append(b.flags, name)
 	b.values[name] = def
+	b.defaults[name] = def
 	b.converters[name] = &IntegerConverter{base}
 	return b
 }
@@ -172,7 +176,8 @@ func (b *flagsBuilder) AddBoolFlag(name, desc string) FlagsBuilder {
 	b.desc = append(b.desc, desc)
 	b.flags = append(b.flags, name)
 	b.values[name] = false
-	b.defaults[name] = true
+	b.founddefs[name] = true
+	b.defaults[name] = false
 	b.converters[name] = &BoolConverter{true}
 	return b
 }
@@ -245,20 +250,20 @@ func (b *flagsBuilder) ToGroup(grp Group, fn interface{}) error {
 	return b.command.ToGroup(grp, fn)
 }
 
-func (b *flagsBuilder) Description() string {
-	var sb strings.Builder
+func (b *flagsBuilder) WriteTo(w io.Writer) (int64, error) {
+	var written int64
 
 	for i, name := range b.flags {
-		def, _ := b.values[name]
-		sb.WriteString(fmt.Sprintf("%s\t%s (default: %v)", toFlag(name), b.desc[i], def))
+		def, _ := b.defaults[name]
 
-		if i+1 < len(b.flags) {
-			sb.WriteString(newline)
-			sb.WriteString("\t")
+		if n, err := fmt.Fprintf(w, "\n\t%s\t%s (default: %v)", toFlag(name), b.desc[i], def); err == nil {
+			written += int64(n)
+		} else {
+			return written + int64(n), err
 		}
 	}
 
-	return sb.String()
+	return written, nil
 }
 
 func (b *flagsBuilder) String() string {
