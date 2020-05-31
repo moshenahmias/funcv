@@ -168,7 +168,7 @@ func (c *command) MustCompile() Command {
 	return cmd
 }
 
-func (c *command) ToGroup(grp Group, fn interface{}) error {
+func (c *command) ToGroup(grp *Group, fn interface{}) error {
 	cmd, err := c.Compile()
 
 	if err != nil {
@@ -176,12 +176,15 @@ func (c *command) ToGroup(grp Group, fn interface{}) error {
 	}
 
 	grp.Add(cmd, fn)
+
 	return nil
 }
 
-func (c *command) Execute(args []string, fn interface{}) error {
+func (c *command) Execute(args []string, fn interface{}) (int, error) {
+	n := 0
+
 	if c.err != nil {
-		return c.err
+		return n, c.err
 	}
 
 	c.params = nil
@@ -190,22 +193,23 @@ func (c *command) Execute(args []string, fn interface{}) error {
 	var params []interface{}
 
 	for _, arg := range c.args {
-
+		l := len(args)
 		args, params, err = arg.Extract(args)
+		n += l - len(args)
 
 		if err != nil {
-			return err
+			return n, err
 		}
 
 		c.params = append(c.params, params...)
 	}
 
 	if len(args) > 0 {
-		return ErrUnknownArgs
+		return n, ErrUnknownArgs
 	}
 
 	if fn == nil {
-		return nil
+		return n, nil
 	}
 
 	var in []reflect.Value
@@ -213,18 +217,18 @@ func (c *command) Execute(args []string, fn interface{}) error {
 	vfn := reflect.ValueOf(fn)
 
 	if vfn.Type().Kind() != reflect.Func {
-		return fmt.Errorf("funcv: invalid function [%v]", vfn.Type().Kind())
+		return n, fmt.Errorf("funcv: invalid function [%v]", vfn.Type().Kind())
 	}
 
 	if vfn.Type().NumIn() != len(c.params) {
-		return fmt.Errorf("funcv: invalid function params count [%d/%d]", vfn.Type().NumIn(), len(c.params))
+		return n, fmt.Errorf("funcv: invalid function params count [%d/%d]", vfn.Type().NumIn(), len(c.params))
 	}
 
 	for i, param := range c.params {
 		v := reflect.ValueOf(param)
 
 		if !v.Type().ConvertibleTo(vfn.Type().In(i)) {
-			return fmt.Errorf("funcv: can't convert param %v to %v", v.Type(), vfn.Type().In(i))
+			return n, fmt.Errorf("funcv: can't convert param %v to %v", v.Type(), vfn.Type().In(i))
 		}
 
 		in = append(in, v.Convert(vfn.Type().In(i)))
@@ -232,7 +236,7 @@ func (c *command) Execute(args []string, fn interface{}) error {
 
 	vfn.Call(in)
 
-	return nil
+	return n, nil
 }
 
 func (c *command) WriteTo(w io.Writer) (int64, error) {

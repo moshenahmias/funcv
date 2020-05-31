@@ -95,7 +95,7 @@ func (b *flagsBuilder) Extract(args []string) ([]string, []interface{}, error) {
 		conv, found := b.converters[name]
 
 		if !found {
-			return nil, nil, fmt.Errorf("funcv: missing converter for %s", name)
+			return args, nil, fmt.Errorf("funcv: missing converter for %s", name)
 		}
 
 		var i int
@@ -245,7 +245,7 @@ func (b *flagsBuilder) MustCompile() Command {
 	return b.command.MustCompile()
 }
 
-func (b *flagsBuilder) ToGroup(grp Group, fn interface{}) error {
+func (b *flagsBuilder) ToGroup(grp *Group, fn interface{}) error {
 	b.command.args = append(b.command.args, b)
 	return b.command.ToGroup(grp, fn)
 }

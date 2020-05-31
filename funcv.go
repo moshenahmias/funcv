@@ -117,7 +117,7 @@ type Compiler interface {
 	// ToGroup compiles and adds the command and
 	// the given action function to a group, returns
 	// an error if the compilation failed
-	ToGroup(grp Group, fn interface{}) error
+	ToGroup(grp *Group, fn interface{}) error
 }
 
 // Command represents a textual command that can be later
@@ -125,15 +125,17 @@ type Compiler interface {
 // function to run
 type Command interface {
 	// Execute tests the supplied arguments against the
-	// command, if they are compatible, the action function is
-	// called with the extracted parameters and nil is returned,
-	// else, non-nil error is returned. the action function arguments
+	// command, if they are all compatible, the action function is
+	// called with the extracted parameters and (len(args), nil) is
+	// returned, else, non-nil error is returned with the number of
+	// compatible arguments. the action function arguments
 	// need to be compatible with the command's arguments or else
 	// a non-nil error is returned
-	Execute(args []string, fn interface{}) error
+	Execute(args []string, fn interface{}) (int, error)
 	io.WriterTo
 }
 
+/*
 // Group ties together multiple commands
 type Group interface {
 	// Add a command and an action function
@@ -147,6 +149,7 @@ type Group interface {
 	Execute(args []string) int
 	io.WriterTo
 }
+*/
 
 // Arg represents a command argument
 type Arg interface {
@@ -168,9 +171,4 @@ type Converter interface {
 // building a new command
 func NewCommand(desc string) Builder {
 	return &command{desc: desc}
-}
-
-// NewGroup returns a new empty group
-func NewGroup() Group {
-	return new(group)
 }

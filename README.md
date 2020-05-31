@@ -15,7 +15,7 @@ func main() {
 		AddStrVar("filename", "file to delete").
 		MustCompile()
 
-	if err := cmd.Execute(os.Args[1:], func(name string) {
+	if _, err := cmd.Execute(os.Args[1:], func(name string) {
 		fmt.Println("deleting", name, "...")
 		// ...
 	}); err != nil {
@@ -62,14 +62,14 @@ It is possible to group different commands together using a `funcv.Group` and te
 
 ```go
 func main() {
-	grp := funcv.NewGroup()
+	var grp funcv.Group
 
 	err := funcv.NewCommand("delete a file").
 		AddConstant("example", false).
 		AddConstant("delete", false).
 		AddBoolFlag("r", "move to recycle bin").
 		AddStrVar("filename", "file to delete").
-		ToGroup(grp, func(recycle bool, name string) {
+		ToGroup(&grp, func(recycle bool, name string) {
 			// the count, order and type of params must match the count, order
 			// and type of flags and variables in the command (excluding constants)	
 			if recycle {
@@ -87,7 +87,7 @@ func main() {
 	err = funcv.NewCommand("print this help").
 		AddConstant("example", false).
 		AddConstant("help", false).
-		ToGroup(grp, func() {
+		ToGroup(&grp, func() {
 			// groups, commands and arguments implement io.WriterTo
 			// and will write their informative usage text into the
 			// writer given to WriteTo(io.Writer)

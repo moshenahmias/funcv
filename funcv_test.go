@@ -9,15 +9,15 @@ func TestConstSensitive(t *testing.T) {
 
 	fail := true
 
-	err := c.Execute([]string{"test"}, func() {
+	_, err := c.Execute([]string{"test"}, func() {
 		fail = false
 	})
 
-	if err != nil {	
+	if err != nil {
 		t.Fatal(err)
 	}
 
-	if fail {	
+	if fail {
 		t.Fatal("func not called")
 	}
 }
@@ -27,15 +27,15 @@ func TestConstInsensitive(t *testing.T) {
 
 	fail := true
 
-	err := c.Execute([]string{"TeSt"}, func() {
+	_, err := c.Execute([]string{"TeSt"}, func() {
 		fail = false
 	})
 
-	if err != nil {	
+	if err != nil {
 		t.Fatal(err)
 	}
 
-	if fail {	
+	if fail {
 		t.Fatal("func not called")
 	}
 }
@@ -45,15 +45,15 @@ func TestStrVar(t *testing.T) {
 
 	var v string
 
-	err := c.Execute([]string{"xyz"}, func(a string) {
+	_, err := c.Execute([]string{"xyz"}, func(a string) {
 		v = a
 	})
 
-	if err != nil {	
+	if err != nil {
 		t.Fatal(err)
 	}
 
-	if v != "xyz" {	
+	if v != "xyz" {
 		t.Fatal("wrong value", v)
 	}
 }
@@ -63,15 +63,15 @@ func TestIntVar(t *testing.T) {
 
 	var v int
 
-	err := c.Execute([]string{"123"}, func(a int) {
+	_, err := c.Execute([]string{"123"}, func(a int) {
 		v = a
 	})
 
-	if err != nil {	
+	if err != nil {
 		t.Fatal(err)
 	}
 
-	if v != 123 {	
+	if v != 123 {
 		t.Fatal("wrong value", v)
 	}
 }
@@ -81,15 +81,15 @@ func TestStrVarWithDefault(t *testing.T) {
 
 	var v string
 
-	err := c.Execute([]string{}, func(a string) {
+	_, err := c.Execute([]string{}, func(a string) {
 		v = a
 	})
 
-	if err != nil {	
+	if err != nil {
 		t.Fatal(err)
 	}
 
-	if v != "xyz" {	
+	if v != "xyz" {
 		t.Fatal("wrong value", v)
 	}
 }
@@ -99,15 +99,15 @@ func TestIntVarWithDefault(t *testing.T) {
 
 	var v int
 
-	err := c.Execute([]string{}, func(a int) {
+	_, err := c.Execute([]string{}, func(a int) {
 		v = a
 	})
 
-	if err != nil {	
+	if err != nil {
 		t.Fatal(err)
 	}
 
-	if v != 123 {	
+	if v != 123 {
 		t.Fatal("wrong value", v)
 	}
 }
@@ -117,15 +117,15 @@ func TestStrFlag(t *testing.T) {
 
 	var v string
 
-	err := c.Execute([]string{"-x", "uvw"}, func(a string) {
+	_, err := c.Execute([]string{"-x", "uvw"}, func(a string) {
 		v = a
 	})
 
-	if err != nil {	
+	if err != nil {
 		t.Fatal(err)
 	}
 
-	if v != "uvw" {	
+	if v != "uvw" {
 		t.Fatal("wrong value", v)
 	}
 }
@@ -135,15 +135,15 @@ func TestStrFlagDefault(t *testing.T) {
 
 	var v string
 
-	err := c.Execute([]string{}, func(a string) {
+	_, err := c.Execute([]string{}, func(a string) {
 		v = a
 	})
 
-	if err != nil {	
+	if err != nil {
 		t.Fatal(err)
 	}
 
-	if v != "xyz" {	
+	if v != "xyz" {
 		t.Fatal("wrong value", v)
 	}
 }
@@ -153,15 +153,15 @@ func TestIntFlag(t *testing.T) {
 
 	var v int
 
-	err := c.Execute([]string{"--xx", "456"}, func(a int) {
+	_, err := c.Execute([]string{"--xx", "456"}, func(a int) {
 		v = a
 	})
 
-	if err != nil {	
+	if err != nil {
 		t.Fatal(err)
 	}
 
-	if v != 456 {	
+	if v != 456 {
 		t.Fatal("wrong value", v)
 	}
 }
@@ -171,15 +171,15 @@ func TestIntFlagDefault(t *testing.T) {
 
 	var v int
 
-	err := c.Execute([]string{}, func(a int) {
+	_, err := c.Execute([]string{}, func(a int) {
 		v = a
 	})
 
-	if err != nil {	
+	if err != nil {
 		t.Fatal(err)
 	}
 
-	if v != 123 {	
+	if v != 123 {
 		t.Fatal("wrong value", v)
 	}
 }
@@ -189,15 +189,15 @@ func TestBoolFlag(t *testing.T) {
 
 	var v bool
 
-	err := c.Execute([]string{"-b"}, func(a bool) {
+	_, err := c.Execute([]string{"-b"}, func(a bool) {
 		v = a
 	})
 
-	if err != nil {	
+	if err != nil {
 		t.Fatal(err)
 	}
 
-	if !v {	
+	if !v {
 		t.Fatal("wrong value", v)
 	}
 }
@@ -207,15 +207,15 @@ func TestBoolFlagDefault(t *testing.T) {
 
 	var v = true
 
-	err := c.Execute([]string{}, func(a bool) {
+	_, err := c.Execute([]string{}, func(a bool) {
 		v = a
 	})
 
-	if err != nil {	
+	if err != nil {
 		t.Fatal(err)
 	}
 
-	if v {	
+	if v {
 		t.Fatal("wrong value", v)
 	}
 }
@@ -223,13 +223,13 @@ func TestBoolFlagDefault(t *testing.T) {
 func TestBoolFlagWithFalseParam(t *testing.T) {
 	c := NewCommand("").AddBoolFlag("b", "").MustCompile()
 
-	err := c.Execute([]string{"-b", "false"}, func(a bool) {
-		if a {	
+	_, err := c.Execute([]string{"-b", "false"}, func(a bool) {
+		if a {
 			t.Fatal("wrong value", a)
 		}
 	})
 
-	if err != nil {	
+	if err != nil {
 		t.Fatal(err)
 	}
 }
@@ -237,13 +237,13 @@ func TestBoolFlagWithFalseParam(t *testing.T) {
 func TestBoolFlagWithTrueParam(t *testing.T) {
 	c := NewCommand("").AddBoolFlag("b", "").MustCompile()
 
-	err := c.Execute([]string{"-b", "true"}, func(a bool) {
-		if !a {	
+	_, err := c.Execute([]string{"-b", "true"}, func(a bool) {
+		if !a {
 			t.Fatal("wrong value", a)
 		}
 	})
 
-	if err != nil {	
+	if err != nil {
 		t.Fatal(err)
 	}
 }
@@ -251,13 +251,13 @@ func TestBoolFlagWithTrueParam(t *testing.T) {
 func TestBoolFlagWithoutParam(t *testing.T) {
 	c := NewCommand("").AddBoolFlag("b", "").MustCompile()
 
-	err := c.Execute([]string{"-b"}, func(a bool) {
-		if !a {	
+	_, err := c.Execute([]string{"-b"}, func(a bool) {
+		if !a {
 			t.Fatal("wrong value", a)
 		}
 	})
 
-	if err != nil {	
+	if err != nil {
 		t.Fatal(err)
 	}
 }
@@ -265,7 +265,7 @@ func TestBoolFlagWithoutParam(t *testing.T) {
 func TestStrFlagWithoutParam(t *testing.T) {
 	c := NewCommand("").AddStrFlag("s", "xyz", "").MustCompile()
 
-	if err := c.Execute([]string{"-s"}, nil); err == nil {	
+	if _, err := c.Execute([]string{"-s"}, nil); err == nil {
 		t.Fatal(err)
 	}
 }
@@ -273,58 +273,62 @@ func TestStrFlagWithoutParam(t *testing.T) {
 func TestIntFlagWithoutParam(t *testing.T) {
 	c := NewCommand("").AddIntFlag("i", 123, 10, "").MustCompile()
 
-	if err := c.Execute([]string{"-i"}, nil); err == nil {	
+	if _, err := c.Execute([]string{"-i"}, nil); err == nil {
 		t.Fatal(err)
 	}
 }
 
 func TestBadFlagName000(t *testing.T) {
 	c := NewCommand("").AddStrFlag("x", "xyz", "").MustCompile()
+	_, err := c.Execute([]string{"x", "uvw"}, nil)
 
-	if c.Execute([]string{"x", "uvw"}, nil) == nil {	
+	if err == nil {
 		t.Fatal("wrong flag name passed")
 	}
 }
 
 func TestBadFlagName001(t *testing.T) {
 	c := NewCommand("").AddStrFlag("x", "xyz", "").MustCompile()
+	_, err := c.Execute([]string{"--x", "uvw"}, nil)
 
-	if c.Execute([]string{"--x", "uvw"}, nil) == nil {	
+	if err == nil {
 		t.Fatal("wrong flag name passed")
 	}
 }
 
 func TestBadFlagName002(t *testing.T) {
 	c := NewCommand("").AddStrFlag("xx", "xyz", "").MustCompile()
+	_, err := c.Execute([]string{"xx", "uvw"}, nil)
 
-	if c.Execute([]string{"xx", "uvw"}, nil) == nil {	
+	if err == nil {
 		t.Fatal("wrong flag name passed")
 	}
 }
 
 func TestBadFlagName003(t *testing.T) {
 	c := NewCommand("").AddStrFlag("xx", "xyz", "").MustCompile()
+	_, err := c.Execute([]string{"-xx", "uvw"}, nil)
 
-	if c.Execute([]string{"-xx", "uvw"}, nil) == nil {	
+	if err == nil {
 		t.Fatal("wrong flag name passed")
 	}
 }
 
 func TestCombined(t *testing.T) {
 	c := NewCommand("").
-	AddConstant("test", false).
-	AddStrFlag("x", "xxx", "").
-	AddIntFlag("y", 111, 10, "").
-	AddBoolFlag("z", "").
-	AddStrVar("v1", "").
-	AddIntVar("v2", 10, "").
-	AddStrVarWithDefault("v3", "v3def", "").
-	AddIntVarWithDefault("v4", 444, 10, "").
-	MustCompile()
+		AddConstant("test", false).
+		AddStrFlag("x", "xxx", "").
+		AddIntFlag("y", 111, 10, "").
+		AddBoolFlag("z", "").
+		AddStrVar("v1", "").
+		AddIntVar("v2", 10, "").
+		AddStrVarWithDefault("v3", "v3def", "").
+		AddIntVarWithDefault("v4", 444, 10, "").
+		MustCompile()
 
 	args := []string{"test", "-x", "xxxx", "-y", "1111", "-z", "111", "222"}
 
-	err := c.Execute(args, func(x string, y int, z bool, v1 string, v2 int, v3 string, v4 int) {
+	_, err := c.Execute(args, func(x string, y int, z bool, v1 string, v2 int, v3 string, v4 int) {
 		if x != "xxxx" {
 			t.Fatal("wrong x", x)
 		}
@@ -354,51 +358,51 @@ func TestCombined(t *testing.T) {
 		}
 	})
 
-	if err != nil {	
+	if err != nil {
 		t.Fatal(err)
 	}
 }
 
 func TestMissingFuncParams(t *testing.T) {
 	c := NewCommand("").
-	AddConstant("test", false).
-	AddStrFlag("x", "xxx", "").
-	AddIntFlag("y", 111, 10, "").
-	AddBoolFlag("z", "").
-	AddStrVar("v1", "").
-	AddIntVar("v2", 10, "").
-	AddStrVarWithDefault("v3", "v3def", "").
-	AddIntVarWithDefault("v4", 444, 10, "").
-	MustCompile()
+		AddConstant("test", false).
+		AddStrFlag("x", "xxx", "").
+		AddIntFlag("y", 111, 10, "").
+		AddBoolFlag("z", "").
+		AddStrVar("v1", "").
+		AddIntVar("v2", 10, "").
+		AddStrVarWithDefault("v3", "v3def", "").
+		AddIntVarWithDefault("v4", 444, 10, "").
+		MustCompile()
 
 	args := []string{"test", "-x", "xxxx", "-y", "1111", "-z", "111", "222"}
 
-	err := c.Execute(args, func(x string, y int, z bool, v1 string, v2 int) {
+	_, err := c.Execute(args, func(x string, y int, z bool, v1 string, v2 int) {
 
 	})
 
-	if err == nil {	
+	if err == nil {
 		t.Fatal("missing params passed")
 	}
 }
 
 func TestNotAFunc(t *testing.T) {
 	c := NewCommand("").
-	AddConstant("test", false).
-	AddStrFlag("x", "xxx", "").
-	AddIntFlag("y", 111, 10, "").
-	AddBoolFlag("z", "").
-	AddStrVar("v1", "").
-	AddIntVar("v2", 10, "").
-	AddStrVarWithDefault("v3", "v3def", "").
-	AddIntVarWithDefault("v4", 444, 10, "").
-	MustCompile()
+		AddConstant("test", false).
+		AddStrFlag("x", "xxx", "").
+		AddIntFlag("y", 111, 10, "").
+		AddBoolFlag("z", "").
+		AddStrVar("v1", "").
+		AddIntVar("v2", 10, "").
+		AddStrVarWithDefault("v3", "v3def", "").
+		AddIntVarWithDefault("v4", 444, 10, "").
+		MustCompile()
 
 	args := []string{"test", "-x", "xxxx", "-y", "1111", "-z", "111", "222"}
 
-	err := c.Execute(args, "")
+	_, err := c.Execute(args, "")
 
-	if err == nil {	
+	if err == nil {
 		t.Fatal("not a func passed")
 	}
 }
@@ -406,21 +410,22 @@ func TestNotAFunc(t *testing.T) {
 func TestGroup000(t *testing.T) {
 
 	cmd0, cmd1, cmd2 := false, false, false
-	grp := NewGroup()
 
-	if err := NewCommand("").AddConstant("cmd0", false).ToGroup(grp, func() {
+	var grp Group
+
+	if err := NewCommand("").AddConstant("cmd0", false).ToGroup(&grp, func() {
 		cmd0 = true
 	}); err != nil {
 		t.Fatal(err)
 	}
 
-	if err := NewCommand("").AddConstant("cmd1", false).ToGroup(grp, func() {
+	if err := NewCommand("").AddConstant("cmd1", false).ToGroup(&grp, func() {
 		cmd1 = true
 	}); err != nil {
 		t.Fatal(err)
 	}
 
-	if err := NewCommand("").AddConstant("cmd2", false).ToGroup(grp, func() {
+	if err := NewCommand("").AddConstant("cmd2", false).ToGroup(&grp, func() {
 		cmd2 = true
 	}); err != nil {
 		t.Fatal(err)
@@ -430,19 +435,19 @@ func TestGroup000(t *testing.T) {
 		t.FailNow()
 	}
 
-	if grp.Execute([]string{"notcmd"}) != 0  || cmd0 || cmd1 || cmd2 {
+	if grp.Execute([]string{"notcmd"}) != 0 || cmd0 || cmd1 || cmd2 {
 		t.FailNow()
 	}
 
-	if grp.Execute([]string{"cmd0"}) != 1  || !cmd0 || cmd1 || cmd2 {
+	if grp.Execute([]string{"cmd0"}) != 1 || !cmd0 || cmd1 || cmd2 {
 		t.FailNow()
 	}
 
-	if grp.Execute([]string{"cmd1"}) != 1  || !cmd0 || !cmd1 || cmd2 {
+	if grp.Execute([]string{"cmd1"}) != 1 || !cmd0 || !cmd1 || cmd2 {
 		t.FailNow()
 	}
 
-	if grp.Execute([]string{"cmd2"}) != 1  || !cmd0 || !cmd1 || !cmd2 {
+	if grp.Execute([]string{"cmd2"}) != 1 || !cmd0 || !cmd1 || !cmd2 {
 		t.FailNow()
 	}
 }
@@ -450,21 +455,21 @@ func TestGroup000(t *testing.T) {
 func TestGroup001(t *testing.T) {
 
 	cmd0, cmd1, cmd2 := false, false, false
-	grp := NewGroup()
+	var grp Group
 
-	if err := NewCommand("").AddConstant("cmd", false).ToGroup(grp, func() {
+	if err := NewCommand("").AddConstant("cmd", false).ToGroup(&grp, func() {
 		cmd0 = true
 	}); err != nil {
 		t.Fatal(err)
 	}
 
-	if err := NewCommand("").AddConstant("cmd", false).ToGroup(grp, func() {
+	if err := NewCommand("").AddConstant("cmd", false).ToGroup(&grp, func() {
 		cmd1 = true
 	}); err != nil {
 		t.Fatal(err)
 	}
 
-	if err := NewCommand("").AddConstant("cmd", false).ToGroup(grp, func() {
+	if err := NewCommand("").AddConstant("cmd", false).ToGroup(&grp, func() {
 		cmd2 = true
 	}); err != nil {
 		t.Fatal(err)
@@ -474,11 +479,89 @@ func TestGroup001(t *testing.T) {
 		t.FailNow()
 	}
 
-	if grp.Execute([]string{"notcmd"}) != 0  || cmd0 || cmd1 || cmd2 {
+	if grp.Execute([]string{"notcmd"}) != 0 || cmd0 || cmd1 || cmd2 {
 		t.FailNow()
 	}
 
-	if grp.Execute([]string{"cmd"}) != 3  || !cmd0 || !cmd1 || !cmd2 {
+	if grp.Execute([]string{"cmd"}) != 3 || !cmd0 || !cmd1 || !cmd2 {
 		t.FailNow()
+	}
+}
+
+func TestCompatibilityDegree000(t *testing.T) {
+	c := NewCommand("").AddConstant("test", false).MustCompile()
+	n, err := c.Execute([]string{"test"}, nil)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if n != 1 {
+		t.Fatal("n =", n)
+	}
+}
+
+func TestCompatibilityDegree001(t *testing.T) {
+	c := NewCommand("").AddConstant("const0", false).AddConstant("const1", false).MustCompile()
+	n, err := c.Execute([]string{}, nil)
+
+	if err == nil {
+		t.FailNow()
+	}
+
+	if n != 0 {
+		t.Fatal("n =", n)
+	}
+}
+
+func TestCompatibilityDegree002(t *testing.T) {
+	c := NewCommand("").AddConstant("const0", false).AddIntVar("var", 10, "").MustCompile()
+	n, err := c.Execute([]string{"const0"}, nil)
+
+	if err == nil {
+		t.FailNow()
+	}
+
+	if n != 1 {
+		t.Fatal("n =", n)
+	}
+}
+
+func TestCompatibilityDegree003(t *testing.T) {
+	c := NewCommand("").AddIntVar("var", 10, "").MustCompile()
+	n, err := c.Execute([]string{"asd"}, nil)
+
+	if err == nil {
+		t.FailNow()
+	}
+
+	if n != 0 {
+		t.Fatal("n =", n)
+	}
+}
+
+func TestCompatibilityDegree004(t *testing.T) {
+	c := NewCommand("").AddIntVar("var", 10, "").MustCompile()
+	n, err := c.Execute([]string{"123"}, nil)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if n != 1 {
+		t.Fatal("n =", n)
+	}
+}
+
+func TestCompatibilityDegree005(t *testing.T) {
+	c := NewCommand("").AddBoolFlag("b", "").MustCompile()
+	n, err := c.Execute([]string{"-b", "true"}, nil)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if n != 2 {
+		t.Fatal("n =", n)
 	}
 }

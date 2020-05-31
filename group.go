@@ -5,25 +5,31 @@ import (
 	"io"
 )
 
-type bindedCommand struct {
+// Pair of a command and an action function
+type Pair struct {
 	cmd Command
 	fn  interface{}
 }
 
-type group struct {
-	commands []bindedCommand
-}
+// Group of commands with binded action functions
+type Group []Pair
 
-func (g *group) Add(cmd Command, fn interface{}) Group {
-	g.commands = append(g.commands, bindedCommand{cmd, fn})
+// Add a command and an action function to the group
+func (g *Group) Add(cmd Command, fn interface{}) *Group {
+	*g = append(*g, Pair{cmd, fn})
 	return g
 }
 
-func (g *group) Execute(args []string) int {
+// Execute tests the supplied arguments against all commands
+// in the group, if some are compatible, the paired action function
+// for each command is called with the extracted parameters,
+// the number of called functions is returned, to be called, every
+// function needs to be compatible with the command's arguments
+func (g *Group) Execute(args []string) int {
 	n := 0
 
-	for _, p := range g.commands {
-		if err := p.cmd.Execute(args, p.fn); err == nil {
+	for _, p := range *g {
+		if _, err := p.cmd.Execute(args, p.fn); err == nil {
 			n++
 		}
 	}
@@ -31,17 +37,19 @@ func (g *group) Execute(args []string) int {
 	return n
 }
 
-func (g *group) WriteTo(w io.Writer) (int64, error) {
+// WriteTo will write to the writer an informative usage
+// text about the commands in the group
+func (g *Group) WriteTo(w io.Writer) (int64, error) {
 	var written int64
 
-	for i, p := range g.commands {
+	for i, p := range *g {
 		if n, err := p.cmd.WriteTo(w); err == nil {
 			written += n
 		} else {
 			return written + n, err
 		}
 
-		if i+1 < len(g.commands) {
+		if i+1 < len(*g) {
 			if n, err := fmt.Fprint(w, "\n\n"); err == nil {
 				written += int64(n)
 			} else {

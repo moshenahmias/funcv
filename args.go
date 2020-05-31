@@ -13,16 +13,16 @@ type constant struct {
 
 func (c *constant) Extract(args []string) ([]string, []interface{}, error) {
 	if len(args) == 0 {
-		return nil, nil, ErrArgNotFound
+		return args, nil, ErrArgNotFound
 	}
 
 	if c.insensitive {
 		if !strings.EqualFold(args[0], c.text) {
-			return nil, nil, ErrArgNotFound
+			return args, nil, ErrArgNotFound
 		}
 	} else {
 		if args[0] != c.text {
-			return nil, nil, ErrArgNotFound
+			return args, nil, ErrArgNotFound
 		}
 	}
 
@@ -44,13 +44,13 @@ type strVar struct {
 
 func (*strVar) Extract(args []string) ([]string, []interface{}, error) {
 	if len(args) == 0 {
-		return nil, nil, ErrArgNotFound
+		return args, nil, ErrArgNotFound
 	}
 
 	s, err := new(StringConverter).Convert(args[0])
 
 	if err != nil {
-		return nil, nil, err
+		return args, nil, err
 	}
 
 	return args[1:], []interface{}{s}, nil
@@ -73,13 +73,13 @@ type intVar struct {
 
 func (v *intVar) Extract(args []string) ([]string, []interface{}, error) {
 	if len(args) == 0 {
-		return nil, nil, ErrArgNotFound
+		return args, nil, ErrArgNotFound
 	}
 
 	i, err := (&IntegerConverter{v.base}).Convert(args[0])
 
 	if err != nil {
-		return nil, nil, err
+		return args, nil, err
 	}
 
 	return args[1:], []interface{}{i}, nil
@@ -108,7 +108,7 @@ func (v *defStrVar) Extract(args []string) ([]string, []interface{}, error) {
 	s, err := new(StringConverter).Convert(args[0])
 
 	if err != nil {
-		return nil, nil, err
+		return args, nil, err
 	}
 
 	return args[1:], []interface{}{s}, nil
@@ -138,7 +138,7 @@ func (v *defIntVar) Extract(args []string) ([]string, []interface{}, error) {
 	i, err := (&IntegerConverter{v.base}).Convert(args[0])
 
 	if err != nil {
-		return nil, nil, err
+		return args, nil, err
 	}
 
 	return args[1:], []interface{}{i}, nil
