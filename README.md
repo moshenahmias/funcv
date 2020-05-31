@@ -2,7 +2,7 @@
 
 **funcv** helps you create CLI tools with Go.
 
-It offers a different approach for dealing with command line arguments and flags.
+**funcv** offers a different approach for dealing with command line arguments and flags.
 
 **funcv** supplies an easy to use command builder, you use that builder to build your set of commands, each such command can be tested against a slice of string arguments, if the arguments are compatible with the command, a given action function is called, the parameters for that function are the extracted and parsed variables and flags input values.
 
@@ -43,14 +43,14 @@ Currently supported list of arguments:
 
 |                               | Type   | Comment                                                      |
 | ----------------------------- | ------ | ------------------------------------------------------------ |
-| Constant                      | -      | Static word (allowed characters: 0-9, A-Z, a-z, _, -)        |
+| Constant                      | -      | Static word (allowed characters: 0-9, A-Z, a-z, _, -).       |
 | String variable               | string |                                                              |
-| Integer variable              | int64  | Every integer type is supported as the action function parameter (converted from int64 with a possible data loss) |
-| String variable with default  | string | No other arguments allowed after that argument except other variables with default value |
-| Integer variable with default | int64  | No other arguments allowed after that argument except other variables with default value |
-| String flag                   | string | -x <value> or --x..x <value>                                 |
-| Integer flag                  | int64  | -x <value> or --x..x <value>, every integer type is supported as the action function parameter (converted from int64 with a possible data loss) |
-| Boolean flag                  | bool   | -x / -x <false/true> or --x..x / --x..x <false/true>         |
+| Integer variable              | int64  | Every integer type is supported as the action function parameter (converted from int64 with a possible data loss). |
+| String variable with default  | string | No other arguments allowed after that argument except other variables with default value. |
+| Integer variable with default | int64  | Every integer type is supported as the action function parameter (converted from int64 with a possible data loss). No other arguments allowed after that argument except other variables with default value. |
+| String flag                   | string | -x \<value\> or --x..x \<value\>                                 |
+| Integer flag                  | int64  | -x \<value\> or --x..x \<value\>, every integer type is supported as the action function parameter (converted from int64 with a possible data loss) |
+| Boolean flag                  | bool   | -x / -x \<false/true\> or --x..x / --x..x \<false/true\>         |
 
 The list of supported arguments is extendable via the `funcv.Arg` interface.
 

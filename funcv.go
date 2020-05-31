@@ -74,7 +74,7 @@ type FlagsAdder interface {
 
 // ArgAdder is used to add custom arguments to a command
 type ArgAdder interface {
-	// AddArg can be used for adding a custom argment
+	// AddArg can be used for adding a custom argument
 	// to the command
 	AddArg(arg Arg) Builder
 }
