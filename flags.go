@@ -75,6 +75,7 @@ func (b *flagsBuilder) Extract(args []string) ([]string, []interface{}, error) {
 		if name == "" {
 			params, err := b.toParams()
 			return args, params, err
+
 		}
 
 		if _, found := b.values[name]; !found {
@@ -122,13 +123,23 @@ func (b *flagsBuilder) Extract(args []string) ([]string, []interface{}, error) {
 	return args, params, err
 }
 
-func (b *flagsBuilder) AddStrFlag(name, def, desc string) FlagsBuilder {
+func (b *flagsBuilder) AddFlag(name, desc string, conv Converter, def interface{}) Builder {
 	if b.command.err != nil {
 		return b
 	}
 
 	if !isValidFlagName(name) {
 		b.command.err = fmt.Errorf("funcv: invalid flag name %s [arg %d]", name, len(b.command.args)+len(b.flags))
+		return b
+	}
+
+	if def == nil {
+		b.command.err = fmt.Errorf("funcv: default for flag %s is nil [arg %d]", name, len(b.command.args)+len(b.flags))
+		return b
+	}
+
+	if !conv.IsSupported(def) {
+		b.command.err = fmt.Errorf("funcv: invalid default %v for flag %s [arg %d]", def, name, len(b.command.args)+len(b.flags))
 		return b
 	}
 
@@ -136,11 +147,11 @@ func (b *flagsBuilder) AddStrFlag(name, def, desc string) FlagsBuilder {
 	b.flags = append(b.flags, name)
 	b.values[name] = def
 	b.defaults[name] = def
-	b.converters[name] = new(StringConverter)
+	b.converters[name] = conv
 	return b
 }
 
-func (b *flagsBuilder) AddIntFlag(name string, def, base int, desc string) FlagsBuilder {
+func (b *flagsBuilder) AddParameterlessFlag(name, desc string, conv Converter, found, missing interface{}) Builder {
 	if b.command.err != nil {
 		return b
 	}
@@ -150,35 +161,22 @@ func (b *flagsBuilder) AddIntFlag(name string, def, base int, desc string) Flags
 		return b
 	}
 
-	if base < 0 {
-		b.command.err = fmt.Errorf("funcv: invalid base %d [arg %d]", base, len(b.command.args)+len(b.flags))
+	if !conv.IsSupported(found) {
+		b.command.err = fmt.Errorf("funcv: invalid default %v for flag %s [arg %d]", found, name, len(b.command.args)+len(b.flags))
+		return b
+	}
+
+	if !conv.IsSupported(missing) {
+		b.command.err = fmt.Errorf("funcv: invalid default %v for flag %s [arg %d]", missing, name, len(b.command.args)+len(b.flags))
 		return b
 	}
 
 	b.desc = append(b.desc, desc)
 	b.flags = append(b.flags, name)
-	b.values[name] = def
-	b.defaults[name] = def
-	b.converters[name] = &IntegerConverter{base}
-	return b
-}
-
-func (b *flagsBuilder) AddBoolFlag(name, desc string) FlagsBuilder {
-	if b.command.err != nil {
-		return b
-	}
-
-	if !isValidFlagName(name) {
-		b.command.err = fmt.Errorf("funcv: invalid flag name %s [arg %d]", name, len(b.command.args)+len(b.flags))
-		return b
-	}
-
-	b.desc = append(b.desc, desc)
-	b.flags = append(b.flags, name)
-	b.values[name] = false
-	b.founddefs[name] = true
-	b.defaults[name] = false
-	b.converters[name] = &BoolConverter{true}
+	b.values[name] = missing
+	b.defaults[name] = missing
+	b.founddefs[name] = found
+	b.converters[name] = conv
 	return b
 }
 
@@ -191,58 +189,40 @@ func (b *flagsBuilder) AddConstant(text string, insensitive bool) Builder {
 	return b.command.AddConstant(text, insensitive)
 }
 
-func (b *flagsBuilder) AddStrVar(name, desc string) Builder {
+func (b *flagsBuilder) AddVariable(name, desc string, conv Converter) Builder {
 	if b.command.err != nil {
 		return b
 	}
 
 	b.command.args = append(b.command.args, b)
-	return b.command.AddStrVar(name, desc)
+	return b.command.AddVariable(name, desc, conv)
 }
 
-func (b *flagsBuilder) AddIntVar(name string, base int, desc string) Builder {
+func (b *flagsBuilder) AddVariableWithDefault(name, desc string, conv Converter, def interface{}) ClosingBuilder {
 	if b.command.err != nil {
 		return b
 	}
 
 	b.command.args = append(b.command.args, b)
-	return b.command.AddIntVar(name, base, desc)
+	return b.command.AddVariableWithDefault(name, desc, conv, def)
 }
 
-func (b *flagsBuilder) AddStrVarWithDefault(name, def, desc string) DefultedVariablesBuilder {
+func (b *flagsBuilder) AddArgument(arg Argument) Builder {
 	if b.command.err != nil {
 		return b
 	}
 
 	b.command.args = append(b.command.args, b)
-	return b.command.AddStrVarWithDefault(name, def, desc)
+	return b.command.AddArgument(arg)
 }
 
-func (b *flagsBuilder) AddIntVarWithDefault(name string, def, base int, desc string) DefultedVariablesBuilder {
+func (b *flagsBuilder) AddVariadic(name, desc string, conv Converter) Compiler {
 	if b.command.err != nil {
 		return b
 	}
 
 	b.command.args = append(b.command.args, b)
-	return b.command.AddIntVarWithDefault(name, def, base, desc)
-}
-
-func (b *flagsBuilder) AddArg(arg Arg) Builder {
-	if b.command.err != nil {
-		return b
-	}
-
-	return b.command.AddArg(arg)
-}
-
-func (b *flagsBuilder) AddStrVariadic(name, desc string) Compiler {
-	b.command.args = append(b.command.args, b)
-	return b.command.AddStrVariadic(name, desc)
-}
-
-func (b *flagsBuilder) AddIntVariadic(name string, base int, desc string) Compiler {
-	b.command.args = append(b.command.args, b)
-	return b.command.AddIntVariadic(name, base, desc)
+	return b.command.AddVariadic(name, desc, conv)
 }
 
 func (b *flagsBuilder) Compile() (Command, error) {

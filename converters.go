@@ -2,6 +2,7 @@ package funcv
 
 import (
 	"fmt"
+	"reflect"
 	"strconv"
 	"strings"
 )
@@ -16,6 +17,11 @@ func (*StringConverter) Convert(arg string) (interface{}, error) {
 	}
 
 	return arg, nil
+}
+
+// IsSupported returns true if the given value is a string
+func (*StringConverter) IsSupported(v interface{}) bool {
+	return reflect.TypeOf(v).Kind() == reflect.String
 }
 
 // IntegerConverter is used to convert string represented integer
@@ -43,6 +49,11 @@ func (c *IntegerConverter) Convert(arg string) (interface{}, error) {
 	}
 
 	return i, nil
+}
+
+// IsSupported returns true if the given value is an interger
+func (*IntegerConverter) IsSupported(v interface{}) bool {
+	return reflect.TypeOf(v).ConvertibleTo(reflect.TypeOf(int64(0)))
 }
 
 // BoolConverter is used to convert string represented integer
@@ -83,4 +94,9 @@ func (c *BoolConverter) Convert(arg string) (interface{}, error) {
 	}
 
 	return nil, fmt.Errorf("funcv: cannot convert %s to boolean", arg)
+}
+
+// IsSupported returns true if the given value is a boolean
+func (*BoolConverter) IsSupported(v interface{}) bool {
+	return reflect.TypeOf(v).Kind() == reflect.Bool
 }

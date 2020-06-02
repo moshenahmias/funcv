@@ -28,90 +28,56 @@ var (
 	ErrInvalidValue = errors.New("funcv: invalid value")
 )
 
-// DefultedVariablesAdder is used to add variables with default to a command
-type DefultedVariablesAdder interface {
-	// AddStrVarWithDefault adds a named string variable with
-	// a default value and a description
-	AddStrVarWithDefault(name, def, desc string) DefultedVariablesBuilder
-
-	// AddIntVarWithDefault adds a named integer variable with
-	// a default value and a description
-	AddIntVarWithDefault(name string, def, base int, desc string) DefultedVariablesBuilder
-}
-
 // ConstantAdder is used to add a constant to a command, constants
 // are a command unique identifiers and can be added anywhere
 type ConstantAdder interface {
 	AddConstant(text string, insensitive bool) Builder
 }
 
-// VariablesAdder is used to add variables to a command
-type VariablesAdder interface {
-	// AddStrVar adds a named string variable with
-	// a description
-	AddStrVar(name, desc string) Builder
-	// AddIntVar adds a named interger variable with
-	// a description
-	AddIntVar(name string, base int, desc string) Builder
+// VariableAdder adds a variable to the command
+type VariableAdder interface {
+	AddVariable(name, desc string, conv Converter) Builder
 }
 
-// FlagsAdder is used to add flags to a command
-type FlagsAdder interface {
-	// AddStrFlag adds a string flag with
-	// a default value and a description
-	// ex: -s abcd, --str abcd
-	AddStrFlag(name, def, desc string) FlagsBuilder
-	// AddIntFlag adds an integer flag with
-	// a default value, base and a description
-	// ex: -i 123, --num 456
-	AddIntFlag(name string, def, base int, desc string) FlagsBuilder
-	// AddBoolFlag adds a boolean flag with
-	// a description, the default value is false (flag not found)
-	// ex: -b, -b false, -b true
-	AddBoolFlag(name, desc string) FlagsBuilder
+// DefaultVariableAdder adds a variable with a default value to the command
+type DefaultVariableAdder interface {
+	AddVariableWithDefault(name, desc string, conv Converter, def interface{}) ClosingBuilder
 }
 
-// ArgAdder is used to add custom arguments to a command
-type ArgAdder interface {
-	AddArg(arg Arg) Builder
-}
-
-// VariadicAdder is used to add zero or more arguments at the
-// end of a command
+// VariadicAdder adds a variadic parameter to the command
 type VariadicAdder interface {
-	// AddStrVariadic adds zero or more strings at the end
-	// of the command
-	AddStrVariadic(name, desc string) Compiler
-	// AddIntVariadic adds zero or more integers at the end
-	// of the command
-	AddIntVariadic(name string, base int, desc string) Compiler
+	AddVariadic(name, desc string, conv Converter) Compiler
 }
 
-// DefultedVariablesBuilder is a subset builder
-// for variable arguments with defaults
-type DefultedVariablesBuilder interface {
-	DefultedVariablesAdder
-	VariadicAdder
-	Compiler
+// FlagAdder adds a flag to the command
+type FlagAdder interface {
+	// AddFlag adds a flag that require a parameter
+	AddFlag(name, desc string, conv Converter, def interface{}) Builder
+	// AddParameterlessFlag adds a flag that doesn't require a parameter (like boolean flags)
+	AddParameterlessFlag(name, desc string, conv Converter, found, missing interface{}) Builder
 }
 
-// FlagsBuilder is a subset builder for flag arguments
-type FlagsBuilder interface {
-	FlagsAdder
-	ConstantAdder
-	VariablesAdder
-	DefultedVariablesAdder
+// ArgumentAdder can be used to add any custom argument
+// to the command
+type ArgumentAdder interface {
+	AddArgument(arg Argument) Builder
+}
+
+// ClosingBuilder is used for adding optional variables
+// or variadic arguments
+type ClosingBuilder interface {
+	DefaultVariableAdder
 	VariadicAdder
 	Compiler
 }
 
 // Builder is used for building a new Command
 type Builder interface {
-	ArgAdder
-	FlagsAdder
+	ArgumentAdder
+	FlagAdder
 	ConstantAdder
-	VariablesAdder
-	DefultedVariablesAdder
+	VariableAdder
+	DefaultVariableAdder
 	VariadicAdder
 	Compiler
 }
@@ -146,8 +112,8 @@ type Command interface {
 	io.WriterTo
 }
 
-// Arg represents a command argument
-type Arg interface {
+// Argument represents a command argument
+type Argument interface {
 	// Extract an argument(s) from the list of arguments
 	// and return the rest of the arguments and extracted
 	// parameters, returns a non-nil error if the extraction
@@ -157,9 +123,15 @@ type Arg interface {
 	fmt.Stringer
 }
 
-// Converter of text argument to typed value
+// Converter of arguments to specific typed values
 type Converter interface {
+	// Convert the given text argument into a
+	// specific type
 	Convert(arg string) (interface{}, error)
+	// IsSupported returns true if the given value
+	// is convertable to the types the converter
+	// produces
+	IsSupported(v interface{}) bool
 }
 
 // NewCommand returns a builder that is used for

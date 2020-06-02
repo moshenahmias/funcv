@@ -41,22 +41,22 @@ The `Execute` method tests the given arguments slice (`[]string{"delete", "song.
 
 Currently supported list of arguments:
 
-|                               | Type      | Comment                                                      |
-| ----------------------------- | --------- | ------------------------------------------------------------ |
-| Constant                      | -         | Static word (allowed characters: 0-9, A-Z, a-z, _, -).       |
-| String variable               | string    |                                                              |
-| Integer variable              | int64     | Every integer type is supported as the action function parameter (converted from int64 with a possible data loss). |
-| String variable with default  | string    | No other arguments allowed after that argument except other variables with default value. |
-| Integer variable with default | int64     | Every integer type is supported as the action function parameter (converted from int64 with a possible data loss). No other arguments allowed after that argument except other variables with default value. |
-| String flag                   | string    | -x \<value\> or --x..x \<value\>                             |
-| Integer flag                  | int64     | -x \<value\> or --x..x \<value\>, every integer type is supported as the action function parameter (converted from int64 with a possible data loss). |
-| Boolean flag                  | bool      | -x / -x \<false/true\> or --x..x / --x..x \<false/true\>     |
-| Integer variadic              | ...int    | No other arguments can be added after.                       |
-| String variadic               | ...string | No other arguments can be added after.                       |
+|          | Comment                                                |
+| -------- | ------------------------------------------------------ |
+| Constant | Static word (allowed characters: 0-9, A-Z, a-z, _, -). |
+| Variable | With default value or without.                         |
+| Flag     | -x or -x..x, with parameter or without.                |
+| Variadic | Closing the list of arguments.                         |
 
-The list of supported arguments is extendable via the `funcv.Arg` interface.
+The list of supported arguments is extendable via the `funcv.Argument` interface.
 
 
+
+### Converters
+
+Arguments that translates to function parameters (ex: not constant) require a `func.Converter`.
+
+The package includes converters for Strings, Integers and Booleans.
 
 ### Groups
 
@@ -69,8 +69,8 @@ func main() {
 	err := funcv.NewCommand("delete a file").
 		AddConstant("example", false).
 		AddConstant("delete", false).
-		AddBoolFlag("r", "move to recycle bin").
-		AddStrVar("filename", "file to delete").
+		AddParameterlessFlag("r", "move to recycle bin", new(funcv.StringConverter), false, true).
+		AddVariable("filename", "file to delete", new(funcv.StringConverter)).
 		ToGroup(&grp, func(recycle bool, name string) {
 			// the count, order and type of params must match the count, order
 			// and type of flags and variables in the command (excluding constants)	
@@ -148,11 +148,13 @@ Variadic action functions support is available. Example:
 func main() {
 	var grp funcv.Group
 
+   	converter := new(funcv.IntegerConverter)
+    
 	if err := funcv.NewCommand("add two numbers").
 		AddConstant("calc", false).
 		AddConstant("add", false).
-		AddIntVar("1st", 10, "first operand").
-		AddIntVar("2nd", 10, "second operand").
+		AddVariable("1st", "first operand", converter).
+		AddVariable("2nd", "second operand", converter).
 		ToGroup(&grp, func(x, y int) {
 			fmt.Println(x, "+", y, "=", x+y, "(I)")
 		}); err != nil {
@@ -162,9 +164,9 @@ func main() {
 	if err := funcv.NewCommand("add two or more numbers").
 		AddConstant("calc", false).
 		AddConstant("add", false).
-		AddIntVar("1st", 10, "first operand").
-		AddIntVar("2nd", 10, "second operand").
-		AddIntVariadic("operands", 10, "list of operands").
+		AddVariable("1st", "first operand", converter).
+		AddVariable("2nd", "second operand", converter).
+		AddVariadic("operands", "list of operands", converter).
 		ToGroup(&grp, func(operands ...int) {
 			var sb strings.Builder
 			var sum int

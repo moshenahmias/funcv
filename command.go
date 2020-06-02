@@ -13,13 +13,13 @@ var (
 )
 
 type command struct {
-	args   []Arg
+	args   []Argument
 	err    error
 	params []interface{}
 	desc   string
 }
 
-func (c *command) AddArg(arg Arg) Builder {
+func (c *command) AddArgument(arg Argument) Builder {
 	c.args = append(c.args, arg)
 	return c
 }
@@ -34,10 +34,10 @@ func (c *command) AddConstant(text string, insensitive bool) Builder {
 		return c
 	}
 
-	return c.AddArg(&constant{text: text, insensitive: insensitive})
+	return c.AddArgument(&constant{text: text, insensitive: insensitive})
 }
 
-func (c *command) AddStrVar(name, desc string) Builder {
+func (c *command) AddVariable(name, desc string, conv Converter) Builder {
 	if c.err != nil {
 		return c
 	}
@@ -47,10 +47,10 @@ func (c *command) AddStrVar(name, desc string) Builder {
 		return c
 	}
 
-	return c.AddArg(&strVar{name: name, desc: desc})
+	return c.AddArgument(&variable{name: name, desc: desc, conv: conv})
 }
 
-func (c *command) AddIntVar(name string, base int, desc string) Builder {
+func (c *command) AddVariableWithDefault(name, desc string, conv Converter, def interface{}) ClosingBuilder {
 	if c.err != nil {
 		return c
 	}
@@ -60,48 +60,20 @@ func (c *command) AddIntVar(name string, base int, desc string) Builder {
 		return c
 	}
 
-	if base < 0 {
-		c.err = fmt.Errorf("funcv: invalid base %d [arg %d]", base, len(c.args))
+	if def == nil {
+		c.err = fmt.Errorf("funcv: default for variable %s is nil [arg %d]", name, len(c.args))
 		return c
 	}
 
-	return c.AddArg(&intVar{name: name, desc: desc, base: base})
+	if !conv.IsSupported(def) {
+		c.err = fmt.Errorf("funcv: invalid default %v for var %s [arg %d]", def, name, len(c.args))
+		return c
+	}
+
+	return c.AddArgument(&variable{name: name, desc: desc, conv: conv, def: def})
 }
 
-func (c *command) AddStrVarWithDefault(name, def, desc string) DefultedVariablesBuilder {
-	if c.err != nil {
-		return c
-	}
-
-	if !isValidVarName(name) {
-		c.err = fmt.Errorf("funcv: invalid var name %s [arg %d]", name, len(c.args))
-		return c
-	}
-
-	c.args = append(c.args, &defStrVar{name: name, desc: desc, def: def})
-	return c
-}
-
-func (c *command) AddIntVarWithDefault(name string, def, base int, desc string) DefultedVariablesBuilder {
-	if c.err != nil {
-		return c
-	}
-
-	if !isValidVarName(name) {
-		c.err = fmt.Errorf("funcv: invalid var name %s [arg %d]", name, len(c.args))
-		return c
-	}
-
-	if base < 0 {
-		c.err = fmt.Errorf("funcv: invalid base %d [arg %d]", base, len(c.args))
-		return c
-	}
-
-	c.args = append(c.args, &defIntVar{name: name, desc: desc, def: def, base: base})
-	return c
-}
-
-func (c *command) AddStrFlag(name, def, desc string) FlagsBuilder {
+func (c *command) AddFlag(name, desc string, conv Converter, def interface{}) Builder {
 	if c.err != nil {
 		return c
 	}
@@ -113,10 +85,10 @@ func (c *command) AddStrFlag(name, def, desc string) FlagsBuilder {
 		defaults:   make(map[string]interface{}),
 		command:    c}
 
-	return fb.AddStrFlag(name, def, desc)
+	return fb.AddFlag(name, desc, conv, def)
 }
 
-func (c *command) AddIntFlag(name string, def, base int, desc string) FlagsBuilder {
+func (c *command) AddParameterlessFlag(name, desc string, conv Converter, found, missing interface{}) Builder {
 	if c.err != nil {
 		return c
 	}
@@ -128,30 +100,20 @@ func (c *command) AddIntFlag(name string, def, base int, desc string) FlagsBuild
 		defaults:   make(map[string]interface{}),
 		command:    c}
 
-	return fb.AddIntFlag(name, def, base, desc)
+	return fb.AddParameterlessFlag(name, desc, conv, found, missing)
 }
 
-func (c *command) AddBoolFlag(name, desc string) FlagsBuilder {
+func (c *command) AddVariadic(name, desc string, conv Converter) Compiler {
 	if c.err != nil {
 		return c
 	}
 
-	fb := &flagsBuilder{
-		converters: make(map[string]Converter),
-		values:     make(map[string]interface{}),
-		founddefs:  make(map[string]interface{}),
-		defaults:   make(map[string]interface{}),
-		command:    c}
+	if !isValidVarName(name) {
+		c.err = fmt.Errorf("funcv: invalid var name %s [arg %d]", name, len(c.args))
+		return c
+	}
 
-	return fb.AddBoolFlag(name, desc)
-}
-
-func (c *command) AddStrVariadic(name, desc string) Compiler {
-	return c.AddArg(&strVariadic{name: name, desc: desc})
-}
-
-func (c *command) AddIntVariadic(name string, base int, desc string) Compiler {
-	return c.AddArg(&intVariadic{name: name, base: base, desc: desc})
+	return c.AddArgument(&variadic{name: name, desc: desc, conv: conv})
 }
 
 func (c *command) Compile() (Command, error) {

@@ -41,7 +41,7 @@ func TestConstInsensitive(t *testing.T) {
 }
 
 func TestStrVar(t *testing.T) {
-	c := NewCommand("").AddStrVar("test", "").MustCompile()
+	c := NewCommand("").AddVariable("test", "", new(StringConverter)).MustCompile()
 
 	var v string
 
@@ -59,7 +59,7 @@ func TestStrVar(t *testing.T) {
 }
 
 func TestIntVar(t *testing.T) {
-	c := NewCommand("").AddIntVar("test", 10, "").MustCompile()
+	c := NewCommand("").AddVariable("test", "", new(IntegerConverter)).MustCompile()
 
 	var v int
 
@@ -77,7 +77,7 @@ func TestIntVar(t *testing.T) {
 }
 
 func TestStrVarWithDefault(t *testing.T) {
-	c := NewCommand("").AddStrVarWithDefault("test", "xyz", "").MustCompile()
+	c := NewCommand("").AddVariableWithDefault("test", "", new(StringConverter), "xyz").MustCompile()
 
 	var v string
 
@@ -95,7 +95,7 @@ func TestStrVarWithDefault(t *testing.T) {
 }
 
 func TestIntVarWithDefault(t *testing.T) {
-	c := NewCommand("").AddIntVarWithDefault("test", 123, 10, "").MustCompile()
+	c := NewCommand("").AddVariableWithDefault("test", "", new(IntegerConverter), 123).MustCompile()
 
 	var v int
 
@@ -113,7 +113,7 @@ func TestIntVarWithDefault(t *testing.T) {
 }
 
 func TestStrFlag(t *testing.T) {
-	c := NewCommand("").AddStrFlag("x", "xyz", "").MustCompile()
+	c := NewCommand("").AddFlag("x", "", new(StringConverter), "xyz").MustCompile()
 
 	var v string
 
@@ -131,7 +131,7 @@ func TestStrFlag(t *testing.T) {
 }
 
 func TestStrFlagDefault(t *testing.T) {
-	c := NewCommand("").AddStrFlag("x", "xyz", "").MustCompile()
+	c := NewCommand("").AddFlag("x", "", new(StringConverter), "xyz").MustCompile()
 
 	var v string
 
@@ -149,7 +149,7 @@ func TestStrFlagDefault(t *testing.T) {
 }
 
 func TestIntFlag(t *testing.T) {
-	c := NewCommand("").AddIntFlag("xx", 123, 10, "").MustCompile()
+	c := NewCommand("").AddFlag("xx", "", new(IntegerConverter), 123).MustCompile()
 
 	var v int
 
@@ -167,7 +167,7 @@ func TestIntFlag(t *testing.T) {
 }
 
 func TestIntFlagDefault(t *testing.T) {
-	c := NewCommand("").AddIntFlag("xx", 123, 10, "").MustCompile()
+	c := NewCommand("").AddFlag("xx", "", new(IntegerConverter), 123).MustCompile()
 
 	var v int
 
@@ -185,7 +185,7 @@ func TestIntFlagDefault(t *testing.T) {
 }
 
 func TestBoolFlag(t *testing.T) {
-	c := NewCommand("").AddBoolFlag("b", "").MustCompile()
+	c := NewCommand("").AddParameterlessFlag("b", "", new(BoolConverter), true, false).MustCompile()
 
 	var v bool
 
@@ -203,7 +203,7 @@ func TestBoolFlag(t *testing.T) {
 }
 
 func TestBoolFlagDefault(t *testing.T) {
-	c := NewCommand("").AddBoolFlag("b", "").MustCompile()
+	c := NewCommand("").AddParameterlessFlag("b", "", new(BoolConverter), true, false).MustCompile()
 
 	var v = true
 
@@ -221,7 +221,7 @@ func TestBoolFlagDefault(t *testing.T) {
 }
 
 func TestBoolFlagWithFalseParam(t *testing.T) {
-	c := NewCommand("").AddBoolFlag("b", "").MustCompile()
+	c := NewCommand("").AddParameterlessFlag("b", "", new(BoolConverter), true, false).MustCompile()
 
 	_, err := c.Execute([]string{"-b", "false"}, func(a bool) {
 		if a {
@@ -235,7 +235,7 @@ func TestBoolFlagWithFalseParam(t *testing.T) {
 }
 
 func TestBoolFlagWithTrueParam(t *testing.T) {
-	c := NewCommand("").AddBoolFlag("b", "").MustCompile()
+	c := NewCommand("").AddParameterlessFlag("b", "", new(BoolConverter), true, false).MustCompile()
 
 	_, err := c.Execute([]string{"-b", "true"}, func(a bool) {
 		if !a {
@@ -249,7 +249,7 @@ func TestBoolFlagWithTrueParam(t *testing.T) {
 }
 
 func TestBoolFlagWithoutParam(t *testing.T) {
-	c := NewCommand("").AddBoolFlag("b", "").MustCompile()
+	c := NewCommand("").AddParameterlessFlag("b", "", new(BoolConverter), true, false).MustCompile()
 
 	_, err := c.Execute([]string{"-b"}, func(a bool) {
 		if !a {
@@ -263,7 +263,7 @@ func TestBoolFlagWithoutParam(t *testing.T) {
 }
 
 func TestStrFlagWithoutParam(t *testing.T) {
-	c := NewCommand("").AddStrFlag("s", "xyz", "").MustCompile()
+	c := NewCommand("").AddFlag("s", "", new(StringConverter), "xyz").MustCompile()
 
 	if _, err := c.Execute([]string{"-s"}, nil); err == nil {
 		t.Fatal(err)
@@ -271,7 +271,7 @@ func TestStrFlagWithoutParam(t *testing.T) {
 }
 
 func TestIntFlagWithoutParam(t *testing.T) {
-	c := NewCommand("").AddIntFlag("i", 123, 10, "").MustCompile()
+	c := NewCommand("").AddFlag("i", "", new(IntegerConverter), 123).MustCompile()
 
 	if _, err := c.Execute([]string{"-i"}, nil); err == nil {
 		t.Fatal(err)
@@ -279,7 +279,7 @@ func TestIntFlagWithoutParam(t *testing.T) {
 }
 
 func TestBadFlagName000(t *testing.T) {
-	c := NewCommand("").AddStrFlag("x", "xyz", "").MustCompile()
+	c := NewCommand("").AddFlag("x", "", new(StringConverter), "xyz").MustCompile()
 	_, err := c.Execute([]string{"x", "uvw"}, nil)
 
 	if err == nil {
@@ -288,7 +288,7 @@ func TestBadFlagName000(t *testing.T) {
 }
 
 func TestBadFlagName001(t *testing.T) {
-	c := NewCommand("").AddStrFlag("x", "xyz", "").MustCompile()
+	c := NewCommand("").AddFlag("x", "", new(StringConverter), "xyz").MustCompile()
 	_, err := c.Execute([]string{"--x", "uvw"}, nil)
 
 	if err == nil {
@@ -297,16 +297,15 @@ func TestBadFlagName001(t *testing.T) {
 }
 
 func TestBadFlagName002(t *testing.T) {
-	c := NewCommand("").AddStrFlag("xx", "xyz", "").MustCompile()
+	c := NewCommand("").AddFlag("xx", "", new(StringConverter), "xyz").MustCompile()
 	_, err := c.Execute([]string{"xx", "uvw"}, nil)
 
 	if err == nil {
 		t.Fatal("wrong flag name passed")
 	}
 }
-
 func TestBadFlagName003(t *testing.T) {
-	c := NewCommand("").AddStrFlag("xx", "xyz", "").MustCompile()
+	c := NewCommand("").AddFlag("xx", "", new(StringConverter), "xyz").MustCompile()
 	_, err := c.Execute([]string{"-xx", "uvw"}, nil)
 
 	if err == nil {
@@ -317,13 +316,13 @@ func TestBadFlagName003(t *testing.T) {
 func TestCombined(t *testing.T) {
 	c := NewCommand("").
 		AddConstant("test", false).
-		AddStrFlag("x", "xxx", "").
-		AddIntFlag("y", 111, 10, "").
-		AddBoolFlag("z", "").
-		AddStrVar("v1", "").
-		AddIntVar("v2", 10, "").
-		AddStrVarWithDefault("v3", "v3def", "").
-		AddIntVarWithDefault("v4", 444, 10, "").
+		AddFlag("x", "", new(StringConverter), "xxx").
+		AddFlag("y", "", new(IntegerConverter), 111).
+		AddParameterlessFlag("z", "", new(BoolConverter), true, false).
+		AddVariable("v1", "", new(StringConverter)).
+		AddVariable("v2", "", new(IntegerConverter)).
+		AddVariableWithDefault("v3", "", new(StringConverter), "v3def").
+		AddVariableWithDefault("v4", "", new(IntegerConverter), 444).
 		MustCompile()
 
 	args := []string{"test", "-x", "xxxx", "-y", "1111", "-z", "111", "222"}
@@ -364,15 +363,16 @@ func TestCombined(t *testing.T) {
 }
 
 func TestMissingFuncParams(t *testing.T) {
+
 	c := NewCommand("").
 		AddConstant("test", false).
-		AddStrFlag("x", "xxx", "").
-		AddIntFlag("y", 111, 10, "").
-		AddBoolFlag("z", "").
-		AddStrVar("v1", "").
-		AddIntVar("v2", 10, "").
-		AddStrVarWithDefault("v3", "v3def", "").
-		AddIntVarWithDefault("v4", 444, 10, "").
+		AddFlag("x", "", new(StringConverter), "xxx").
+		AddFlag("y", "", new(IntegerConverter), 111).
+		AddParameterlessFlag("z", "", new(BoolConverter), true, false).
+		AddVariable("v1", "", new(StringConverter)).
+		AddVariable("v2", "", new(IntegerConverter)).
+		AddVariableWithDefault("v3", "", new(StringConverter), "v3def").
+		AddVariableWithDefault("v4", "", new(IntegerConverter), 444).
 		MustCompile()
 
 	args := []string{"test", "-x", "xxxx", "-y", "1111", "-z", "111", "222"}
@@ -387,15 +387,16 @@ func TestMissingFuncParams(t *testing.T) {
 }
 
 func TestNotAFunc(t *testing.T) {
+
 	c := NewCommand("").
 		AddConstant("test", false).
-		AddStrFlag("x", "xxx", "").
-		AddIntFlag("y", 111, 10, "").
-		AddBoolFlag("z", "").
-		AddStrVar("v1", "").
-		AddIntVar("v2", 10, "").
-		AddStrVarWithDefault("v3", "v3def", "").
-		AddIntVarWithDefault("v4", 444, 10, "").
+		AddFlag("x", "", new(StringConverter), "xxx").
+		AddFlag("y", "", new(IntegerConverter), 111).
+		AddParameterlessFlag("z", "", new(BoolConverter), true, false).
+		AddVariable("v1", "", new(StringConverter)).
+		AddVariable("v2", "", new(IntegerConverter)).
+		AddVariableWithDefault("v3", "", new(StringConverter), "v3def").
+		AddVariableWithDefault("v4", "", new(IntegerConverter), 444).
 		MustCompile()
 
 	args := []string{"test", "-x", "xxxx", "-y", "1111", "-z", "111", "222"}
@@ -563,7 +564,7 @@ func TestCompatibilityDegree001(t *testing.T) {
 }
 
 func TestCompatibilityDegree002(t *testing.T) {
-	c := NewCommand("").AddConstant("const0", false).AddIntVar("var", 10, "").MustCompile()
+	c := NewCommand("").AddConstant("const0", false).AddVariable("var", "", new(IntegerConverter)).MustCompile()
 	n, err := c.Execute([]string{"const0"}, nil)
 
 	if err == nil {
@@ -576,7 +577,7 @@ func TestCompatibilityDegree002(t *testing.T) {
 }
 
 func TestCompatibilityDegree003(t *testing.T) {
-	c := NewCommand("").AddIntVar("var", 10, "").MustCompile()
+	c := NewCommand("").AddVariable("var", "", new(IntegerConverter)).MustCompile()
 	n, err := c.Execute([]string{"asd"}, nil)
 
 	if err == nil {
@@ -589,7 +590,7 @@ func TestCompatibilityDegree003(t *testing.T) {
 }
 
 func TestCompatibilityDegree004(t *testing.T) {
-	c := NewCommand("").AddIntVar("var", 10, "").MustCompile()
+	c := NewCommand("").AddVariable("var", "", new(IntegerConverter)).MustCompile()
 	n, err := c.Execute([]string{"123"}, nil)
 
 	if err != nil {
@@ -602,7 +603,7 @@ func TestCompatibilityDegree004(t *testing.T) {
 }
 
 func TestCompatibilityDegree005(t *testing.T) {
-	c := NewCommand("").AddBoolFlag("b", "").MustCompile()
+	c := NewCommand("").AddParameterlessFlag("b", "", new(BoolConverter), true, false).MustCompile()
 	n, err := c.Execute([]string{"-b", "true"}, nil)
 
 	if err != nil {
@@ -615,7 +616,7 @@ func TestCompatibilityDegree005(t *testing.T) {
 }
 
 func TestStrVariadic(t *testing.T) {
-	c := NewCommand("").AddConstant("test", false).AddStrVariadic("params", "").MustCompile()
+	c := NewCommand("").AddConstant("test", false).AddVariadic("params", "", new(StringConverter)).MustCompile()
 
 	fail := true
 
@@ -640,7 +641,7 @@ func TestStrVariadic(t *testing.T) {
 }
 
 func TestIntVariadic(t *testing.T) {
-	c := NewCommand("").AddConstant("test", false).AddIntVariadic("params", 10, "").MustCompile()
+	c := NewCommand("").AddConstant("test", false).AddVariadic("params", "", new(IntegerConverter)).MustCompile()
 
 	fail := true
 
@@ -665,7 +666,7 @@ func TestIntVariadic(t *testing.T) {
 }
 
 func TestVariadic000(t *testing.T) {
-	c := NewCommand("").AddConstant("test", false).AddStrVariadic("params", "").MustCompile()
+	c := NewCommand("").AddConstant("test", false).AddVariadic("params", "", new(StringConverter)).MustCompile()
 
 	fail := true
 
@@ -690,7 +691,7 @@ func TestVariadic000(t *testing.T) {
 }
 
 func TestVariadic001(t *testing.T) {
-	c := NewCommand("").AddConstant("test", false).AddStrVar("s", "").AddStrVariadic("params", "").MustCompile()
+	c := NewCommand("").AddConstant("test", false).AddVariable("s", "", new(StringConverter)).AddVariadic("params", "", new(StringConverter)).MustCompile()
 
 	fail := true
 
@@ -720,7 +721,7 @@ func TestVariadic001(t *testing.T) {
 }
 
 func TestVariadic002(t *testing.T) {
-	c := NewCommand("").AddConstant("test", false).AddStrVar("s", "").AddStrVariadic("params", "").MustCompile()
+	c := NewCommand("").AddConstant("test", false).AddVariable("s", "", new(StringConverter)).AddVariadic("params", "", new(StringConverter)).MustCompile()
 
 	fail := true
 
@@ -746,5 +747,47 @@ func TestVariadic002(t *testing.T) {
 
 	if n != 3 {
 		t.Fatal("n =", n)
+	}
+}
+
+func TestDefaultType000(t *testing.T) {
+	if _, err := NewCommand("").AddFlag("x", "", new(IntegerConverter), 456).Compile(); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestDefaultType001(t *testing.T) {
+	if _, err := NewCommand("").AddFlag("x", "", new(IntegerConverter), "456").Compile(); err == nil {
+		t.FailNow()
+	}
+}
+
+func TestDefaultType002(t *testing.T) {
+	if _, err := NewCommand("").AddFlag("x", "", new(StringConverter), "xyz").Compile(); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestDefaultType003(t *testing.T) {
+	if _, err := NewCommand("").AddFlag("x", "", new(StringConverter), 123).Compile(); err == nil {
+		t.FailNow()
+	}
+}
+
+func TestDefaultType004(t *testing.T) {
+	if _, err := NewCommand("").AddParameterlessFlag("x", "", new(BoolConverter), true, false).Compile(); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestDefaultType005(t *testing.T) {
+	if _, err := NewCommand("").AddParameterlessFlag("x", "", new(BoolConverter), 123, false).Compile(); err == nil {
+		t.FailNow()
+	}
+}
+
+func TestDefaultType006(t *testing.T) {
+	if _, err := NewCommand("").AddParameterlessFlag("x", "", new(BoolConverter), true, "false").Compile(); err == nil {
+		t.FailNow()
 	}
 }

@@ -37,183 +37,81 @@ func (c *constant) String() string {
 	return c.text
 }
 
-type strVar struct {
+type variable struct {
 	name string
 	desc string
+	conv Converter
+	def  interface{}
 }
 
-func (*strVar) Extract(args []string) ([]string, []interface{}, error) {
+func (v *variable) Extract(args []string) ([]string, []interface{}, error) {
 	if len(args) == 0 {
+		if v.def != nil {
+			return args, []interface{}{v.def}, nil
+		}
+
 		return args, nil, ErrArgNotFound
 	}
 
-	s, err := new(StringConverter).Convert(args[0])
+	p, err := v.conv.Convert(args[0])
 
 	if err != nil {
 		return args, nil, err
 	}
 
-	return args[1:], []interface{}{s}, nil
+	return args[1:], []interface{}{p}, nil
 }
 
-func (v *strVar) WriteTo(w io.Writer) (int64, error) {
+func (v *variable) WriteTo(w io.Writer) (int64, error) {
+	if v.def != nil {
+		n, err := fmt.Fprintf(w, "\n\t%s\t%s (default: %v)", v.name, v.desc, v.def)
+		return int64(n), err
+	}
+
 	n, err := fmt.Fprintf(w, "\n\t%s\t%s", v.name, v.desc)
+
 	return int64(n), err
 }
 
-func (v *strVar) String() string {
+func (v *variable) String() string {
+	if v.def != nil {
+		return fmt.Sprintf("[%s]", v.name)
+	}
+
 	return fmt.Sprintf("<%s>", v.name)
 }
 
-type intVar struct {
+type variadic struct {
 	name string
 	desc string
-	base int
+	conv Converter
 }
 
-func (v *intVar) Extract(args []string) ([]string, []interface{}, error) {
-	if len(args) == 0 {
-		return args, nil, ErrArgNotFound
-	}
-
-	i, err := (&IntegerConverter{v.base}).Convert(args[0])
-
-	if err != nil {
-		return args, nil, err
-	}
-
-	return args[1:], []interface{}{i}, nil
-}
-
-func (v *intVar) WriteTo(w io.Writer) (int64, error) {
-	n, err := fmt.Fprintf(w, "\n\t%s\t%s (base: %d)", v.name, v.desc, v.base)
-	return int64(n), err
-}
-
-func (v *intVar) String() string {
-	return fmt.Sprintf("<%s>", v.name)
-}
-
-type defStrVar struct {
-	name string
-	desc string
-	def  string
-}
-
-func (v *defStrVar) Extract(args []string) ([]string, []interface{}, error) {
-	if len(args) == 0 {
-		return args, []interface{}{v.def}, nil
-	}
-
-	s, err := new(StringConverter).Convert(args[0])
-
-	if err != nil {
-		return args, nil, err
-	}
-
-	return args[1:], []interface{}{s}, nil
-}
-
-func (v *defStrVar) WriteTo(w io.Writer) (int64, error) {
-	n, err := fmt.Fprintf(w, "\n\t%s\t%s (default: %s)", v.name, v.desc, v.def)
-	return int64(n), err
-}
-
-func (v *defStrVar) String() string {
-	return fmt.Sprintf("[%s]", v.name)
-}
-
-type defIntVar struct {
-	name string
-	desc string
-	def  int
-	base int
-}
-
-func (v *defIntVar) Extract(args []string) ([]string, []interface{}, error) {
-	if len(args) == 0 {
-		return args, []interface{}{v.def}, nil
-	}
-
-	i, err := (&IntegerConverter{v.base}).Convert(args[0])
-
-	if err != nil {
-		return args, nil, err
-	}
-
-	return args[1:], []interface{}{i}, nil
-}
-
-func (v *defIntVar) WriteTo(w io.Writer) (int64, error) {
-	n, err := fmt.Fprintf(w, "\n\t%s\t%s (base: %d, default: %d)", v.name, v.desc, v.base, v.def)
-	return int64(n), err
-}
-
-func (v *defIntVar) String() string {
-	return fmt.Sprintf("[%s]", v.name)
-}
-
-type strVariadic struct {
-	name string
-	desc string
-}
-
-func (*strVariadic) Extract(args []string) ([]string, []interface{}, error) {
+func (v *variadic) Extract(args []string) ([]string, []interface{}, error) {
 	if len(args) == 0 {
 		return args, nil, nil
 	}
-
-	var params []interface{}
-
-	for _, arg := range args {
-		params = append(params, arg)
-	}
-
-	return nil, params, nil
-}
-
-func (v *strVariadic) WriteTo(w io.Writer) (int64, error) {
-	n, err := fmt.Fprintf(w, "\n\t%s...\t%s", v.name, v.desc)
-	return int64(n), err
-}
-
-func (v *strVariadic) String() string {
-	return fmt.Sprintf("[%s...]", v.name)
-}
-
-type intVariadic struct {
-	name string
-	base int
-	desc string
-}
-
-func (v *intVariadic) Extract(args []string) ([]string, []interface{}, error) {
-	if len(args) == 0 {
-		return args, nil, nil
-	}
-
-	conv := &IntegerConverter{v.base}
 
 	var params []interface{}
 
 	for i, arg := range args {
-		v, err := conv.Convert(arg)
+		p, err := v.conv.Convert(arg)
 
 		if err != nil {
 			return args[i:], nil, err
 		}
 
-		params = append(params, v)
+		params = append(params, p)
 	}
 
 	return nil, params, nil
 }
 
-func (v *intVariadic) WriteTo(w io.Writer) (int64, error) {
-	n, err := fmt.Fprintf(w, "\n\t%s...\t%s (base: %d)", v.name, v.desc, v.base)
+func (v *variadic) WriteTo(w io.Writer) (int64, error) {
+	n, err := fmt.Fprintf(w, "\n\t%s...\t%s", v.name, v.desc)
 	return int64(n), err
 }
 
-func (v *intVariadic) String() string {
+func (v *variadic) String() string {
 	return fmt.Sprintf("[%s...]", v.name)
 }
