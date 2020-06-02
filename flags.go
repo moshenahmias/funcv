@@ -235,6 +235,16 @@ func (b *flagsBuilder) AddArg(arg Arg) Builder {
 	return b.command.AddArg(arg)
 }
 
+func (b *flagsBuilder) AddStrVariadic(name, desc string) Compiler {
+	b.command.args = append(b.command.args, b)
+	return b.command.AddStrVariadic(name, desc)
+}
+
+func (b *flagsBuilder) AddIntVariadic(name string, base int, desc string) Compiler {
+	b.command.args = append(b.command.args, b)
+	return b.command.AddIntVariadic(name, base, desc)
+}
+
 func (b *flagsBuilder) Compile() (Command, error) {
 	b.command.args = append(b.command.args, b)
 	return b.command.Compile()

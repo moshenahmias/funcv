@@ -146,6 +146,14 @@ func (c *command) AddBoolFlag(name, desc string) FlagsBuilder {
 	return fb.AddBoolFlag(name, desc)
 }
 
+func (c *command) AddStrVariadic(name, desc string) Compiler {
+	return c.AddArg(&strVariadic{name: name, desc: desc})
+}
+
+func (c *command) AddIntVariadic(name string, base int, desc string) Compiler {
+	return c.AddArg(&intVariadic{name: name, base: base, desc: desc})
+}
+
 func (c *command) Compile() (Command, error) {
 	if c.err != nil {
 		return nil, c.err
@@ -205,14 +213,12 @@ func (c *command) Execute(args []string, fn interface{}) (int, error) {
 	}
 
 	if len(args) > 0 {
-		return n, ErrUnknownArgs
+		return n, fmt.Errorf("funcv: %v (%w)", args, ErrUnknownArgs)
 	}
 
 	if fn == nil {
 		return n, nil
 	}
-
-	var in []reflect.Value
 
 	vfn := reflect.ValueOf(fn)
 
@@ -221,17 +227,35 @@ func (c *command) Execute(args []string, fn interface{}) (int, error) {
 	}
 
 	if vfn.Type().NumIn() != len(c.params) {
-		return n, fmt.Errorf("funcv: invalid function params count [%d/%d]", vfn.Type().NumIn(), len(c.params))
-	}
 
-	for i, param := range c.params {
-		v := reflect.ValueOf(param)
-
-		if !v.Type().ConvertibleTo(vfn.Type().In(i)) {
-			return n, fmt.Errorf("funcv: can't convert param %v to %v", v.Type(), vfn.Type().In(i))
+		if !vfn.Type().IsVariadic() {
+			return n, fmt.Errorf("funcv: invalid function params count [count: %d, input: %d]", vfn.Type().NumIn(), len(c.params))
 		}
 
-		in = append(in, v.Convert(vfn.Type().In(i)))
+		if len(c.params) < vfn.Type().NumIn()-1 {
+			return n, fmt.Errorf("funcv: invalid variadic function params count [count: %d..inf, input=%d]", vfn.Type().NumIn()-1, len(c.params))
+		}
+	}
+
+	var in []reflect.Value
+
+	i := 0
+
+	for _, param := range c.params {
+		v := reflect.ValueOf(param)
+		t := vfn.Type().In(i)
+
+		if i+1 == vfn.Type().NumIn() && vfn.Type().IsVariadic() {
+			t = t.Elem()
+		} else {
+			i++
+		}
+
+		if !v.Type().ConvertibleTo(t) {
+			return n, fmt.Errorf("funcv: can't convert param %v to %v", v.Type(), t)
+		}
+
+		in = append(in, v.Convert(t))
 	}
 
 	vfn.Call(in)

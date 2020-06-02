@@ -20,21 +20,36 @@ func (g *Group) Add(cmd Command, fn interface{}) *Group {
 	return g
 }
 
-// Execute tests the supplied arguments against all commands
-// in the group, if some are compatible, the paired action function
-// for each command is called with the extracted parameters,
-// the number of called functions is returned, to be called, every
-// function needs to be compatible with the command's arguments
-func (g *Group) Execute(args []string) int {
-	n := 0
-
+// ExecuteAll tests the supplied arguments against all commands
+// in the group, if a suitable command found, the paired action
+// function is called with the extracted parameters, the number of
+// called functions is returned
+func (g *Group) ExecuteAll(args []string) (n int) {
 	for _, p := range *g {
 		if _, err := p.cmd.Execute(args, p.fn); err == nil {
 			n++
 		}
 	}
 
-	return n
+	return
+}
+
+// ExecuteFirst tests the supplied arguments against the commands
+// in the group, if a suitable command found, the paired action
+// function is called with the extracted parameters and the method
+// returns immediately the command's index, without testing other
+// commands, if no suitable command found, the method returns a
+// negative value
+func (g *Group) ExecuteFirst(args []string) (i int) {
+	var p Pair
+
+	for i, p = range *g {
+		if _, err := p.cmd.Execute(args, p.fn); err == nil {
+			return
+		}
+	}
+
+	return -1
 }
 
 // WriteTo will write to the writer an informative usage

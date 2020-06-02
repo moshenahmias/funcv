@@ -435,19 +435,19 @@ func TestGroup000(t *testing.T) {
 		t.FailNow()
 	}
 
-	if grp.Execute([]string{"notcmd"}) != 0 || cmd0 || cmd1 || cmd2 {
+	if grp.ExecuteAll([]string{"notcmd"}) != 0 || cmd0 || cmd1 || cmd2 {
 		t.FailNow()
 	}
 
-	if grp.Execute([]string{"cmd0"}) != 1 || !cmd0 || cmd1 || cmd2 {
+	if grp.ExecuteAll([]string{"cmd0"}) != 1 || !cmd0 || cmd1 || cmd2 {
 		t.FailNow()
 	}
 
-	if grp.Execute([]string{"cmd1"}) != 1 || !cmd0 || !cmd1 || cmd2 {
+	if grp.ExecuteAll([]string{"cmd1"}) != 1 || !cmd0 || !cmd1 || cmd2 {
 		t.FailNow()
 	}
 
-	if grp.Execute([]string{"cmd2"}) != 1 || !cmd0 || !cmd1 || !cmd2 {
+	if grp.ExecuteAll([]string{"cmd2"}) != 1 || !cmd0 || !cmd1 || !cmd2 {
 		t.FailNow()
 	}
 }
@@ -479,11 +479,59 @@ func TestGroup001(t *testing.T) {
 		t.FailNow()
 	}
 
-	if grp.Execute([]string{"notcmd"}) != 0 || cmd0 || cmd1 || cmd2 {
+	if grp.ExecuteAll([]string{"notcmd"}) != 0 || cmd0 || cmd1 || cmd2 {
 		t.FailNow()
 	}
 
-	if grp.Execute([]string{"cmd"}) != 3 || !cmd0 || !cmd1 || !cmd2 {
+	if grp.ExecuteAll([]string{"cmd"}) != 3 || !cmd0 || !cmd1 || !cmd2 {
+		t.FailNow()
+	}
+}
+
+func TestGroup002(t *testing.T) {
+
+	cmd0, cmd1, cmd2 := false, false, false
+	var grp Group
+
+	if err := NewCommand("").AddConstant("cmd0", false).ToGroup(&grp, func() {
+		cmd0 = true
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := NewCommand("").AddConstant("cmd1", false).ToGroup(&grp, func() {
+		cmd1 = true
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := NewCommand("").AddConstant("cmd2", false).ToGroup(&grp, func() {
+		cmd2 = true
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	if cmd0 || cmd1 || cmd2 {
+		t.FailNow()
+	}
+
+	if grp.ExecuteFirst([]string{"notcmd"}) >= 0 || cmd0 || cmd1 || cmd2 {
+		t.FailNow()
+	}
+
+	if grp.ExecuteFirst([]string{"cmd0"}) != 0 || !cmd0 || cmd1 || cmd2 {
+		t.FailNow()
+	}
+
+	cmd0, cmd1, cmd2 = false, false, false
+
+	if grp.ExecuteFirst([]string{"cmd1"}) != 1 || cmd0 || !cmd1 || cmd2 {
+		t.FailNow()
+	}
+
+	cmd0, cmd1, cmd2 = false, false, false
+
+	if grp.ExecuteFirst([]string{"cmd2"}) != 2 || cmd0 || cmd1 || !cmd2 {
 		t.FailNow()
 	}
 }
@@ -562,6 +610,141 @@ func TestCompatibilityDegree005(t *testing.T) {
 	}
 
 	if n != 2 {
+		t.Fatal("n =", n)
+	}
+}
+
+func TestStrVariadic(t *testing.T) {
+	c := NewCommand("").AddConstant("test", false).AddStrVariadic("params", "").MustCompile()
+
+	fail := true
+
+	n, err := c.Execute([]string{"test", "cr0", "cr1", "cr2"}, func(params ...string) {
+		fail = false
+		if len(params) != 3 || params[0] != "cr0" || params[1] != "cr1" || params[2] != "cr2" {
+			t.Fatal("params = ", params)
+		}
+	})
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if fail {
+		t.Fatal("func not called")
+	}
+
+	if n != 4 {
+		t.Fatal("n =", n)
+	}
+}
+
+func TestIntVariadic(t *testing.T) {
+	c := NewCommand("").AddConstant("test", false).AddIntVariadic("params", 10, "").MustCompile()
+
+	fail := true
+
+	n, err := c.Execute([]string{"test", "123", "456", "789"}, func(params ...int) {
+		fail = false
+		if len(params) != 3 || params[0] != 123 || params[1] != 456 || params[2] != 789 {
+			t.Fatal("params = ", params)
+		}
+	})
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if fail {
+		t.Fatal("func not called")
+	}
+
+	if n != 4 {
+		t.Fatal("n =", n)
+	}
+}
+
+func TestVariadic000(t *testing.T) {
+	c := NewCommand("").AddConstant("test", false).AddStrVariadic("params", "").MustCompile()
+
+	fail := true
+
+	n, err := c.Execute([]string{"test"}, func(params ...string) {
+		fail = false
+		if len(params) != 0 {
+			t.Fatal("len(params) =", len(params))
+		}
+	})
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if fail {
+		t.Fatal("func not called")
+	}
+
+	if n != 1 {
+		t.Fatal("n =", n)
+	}
+}
+
+func TestVariadic001(t *testing.T) {
+	c := NewCommand("").AddConstant("test", false).AddStrVar("s", "").AddStrVariadic("params", "").MustCompile()
+
+	fail := true
+
+	n, err := c.Execute([]string{"test", "***"}, func(s string, params ...string) {
+		fail = false
+
+		if s != "***" {
+			t.Fatal("s =", s)
+		}
+
+		if len(params) != 0 {
+			t.Fatal("len(params) =", len(params))
+		}
+	})
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if fail {
+		t.Fatal("func not called")
+	}
+
+	if n != 2 {
+		t.Fatal("n =", n)
+	}
+}
+
+func TestVariadic002(t *testing.T) {
+	c := NewCommand("").AddConstant("test", false).AddStrVar("s", "").AddStrVariadic("params", "").MustCompile()
+
+	fail := true
+
+	n, err := c.Execute([]string{"test", "***", "$$$"}, func(s string, params ...string) {
+		fail = false
+
+		if s != "***" {
+			t.Fatal("s =", s)
+		}
+
+		if len(params) != 1 || params[0] != "$$$" {
+			t.Fatal("params =", params)
+		}
+	})
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if fail {
+		t.Fatal("func not called")
+	}
+
+	if n != 3 {
 		t.Fatal("n =", n)
 	}
 }

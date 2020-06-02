@@ -4,7 +4,7 @@
 
 **funcv** offers a different approach for dealing with command line arguments and flags.
 
-**funcv** supplies an easy to use command builder, you use that builder to build your set of commands, each such command can be tested against a slice of string arguments, if the arguments are compatible with the command, a given action function is called, the parameters for that function are the extracted and parsed variables and flags input values.
+**funcv** supplies an easy to use command builder, you use that builder to build your set of commands, each such command can be tested against a slice of string arguments, if the arguments are compatible with the command, a given action function is called, the parameters for that function are the extracted and parsed variables and flags.
 
 Let's see how it works with a simple example:
 
@@ -41,16 +41,18 @@ The `Execute` method tests the given arguments slice (`[]string{"delete", "song.
 
 Currently supported list of arguments:
 
-|                               | Type   | Comment                                                      |
-| ----------------------------- | ------ | ------------------------------------------------------------ |
-| Constant                      | -      | Static word (allowed characters: 0-9, A-Z, a-z, _, -).       |
-| String variable               | string |                                                              |
-| Integer variable              | int64  | Every integer type is supported as the action function parameter (converted from int64 with a possible data loss). |
-| String variable with default  | string | No other arguments allowed after that argument except other variables with default value. |
-| Integer variable with default | int64  | Every integer type is supported as the action function parameter (converted from int64 with a possible data loss). No other arguments allowed after that argument except other variables with default value. |
-| String flag                   | string | -x \<value\> or --x..x \<value\>                                 |
-| Integer flag                  | int64  | -x \<value\> or --x..x \<value\>, every integer type is supported as the action function parameter (converted from int64 with a possible data loss) |
-| Boolean flag                  | bool   | -x / -x \<false/true\> or --x..x / --x..x \<false/true\>         |
+|                               | Type      | Comment                                                      |
+| ----------------------------- | --------- | ------------------------------------------------------------ |
+| Constant                      | -         | Static word (allowed characters: 0-9, A-Z, a-z, _, -).       |
+| String variable               | string    |                                                              |
+| Integer variable              | int64     | Every integer type is supported as the action function parameter (converted from int64 with a possible data loss). |
+| String variable with default  | string    | No other arguments allowed after that argument except other variables with default value. |
+| Integer variable with default | int64     | Every integer type is supported as the action function parameter (converted from int64 with a possible data loss). No other arguments allowed after that argument except other variables with default value. |
+| String flag                   | string    | -x \<value\> or --x..x \<value\>                             |
+| Integer flag                  | int64     | -x \<value\> or --x..x \<value\>, every integer type is supported as the action function parameter (converted from int64 with a possible data loss). |
+| Boolean flag                  | bool      | -x / -x \<false/true\> or --x..x / --x..x \<false/true\>     |
+| Integer variadic              | ...int    | No other arguments can be added after.                       |
+| String variadic               | ...string | No other arguments can be added after.                       |
 
 The list of supported arguments is extendable via the `funcv.Arg` interface.
 
@@ -58,7 +60,7 @@ The list of supported arguments is extendable via the `funcv.Arg` interface.
 
 ### Groups
 
-It is possible to group different commands together using a `funcv.Group` and test a slice of arguments against all grouped commands via a single call:
+It is possible to group different commands together using a `funcv.Group`:
 
 ```go
 func main() {
@@ -105,7 +107,7 @@ func main() {
 
 	// test against all commands in grp
 	// returns the number of executed commands
-	if grp.Execute(append([]string{"example"}, os.Args[1:]...)) == 0 {
+	if grp.ExecuteAll(append([]string{"example"}, os.Args[1:]...)) == 0 {
 		fmt.Fprintln(os.Stderr, "invalid command:", strings.Join(os.Args[1:], " "))
 	}
 }
@@ -134,6 +136,88 @@ print this help:        > example help
 
 $ example typo
 invalid command: typo
+```
+
+
+
+### Variadic Functions
+
+Variadic action functions support is available. Example:  
+
+```go
+func main() {
+	var grp funcv.Group
+
+	if err := funcv.NewCommand("add two numbers").
+		AddConstant("calc", false).
+		AddConstant("add", false).
+		AddIntVar("1st", 10, "first operand").
+		AddIntVar("2nd", 10, "second operand").
+		ToGroup(&grp, func(x, y int) {
+			fmt.Println(x, "+", y, "=", x+y, "(I)")
+		}); err != nil {
+		panic(err)
+	}
+
+	if err := funcv.NewCommand("add two or more numbers").
+		AddConstant("calc", false).
+		AddConstant("add", false).
+		AddIntVar("1st", 10, "first operand").
+		AddIntVar("2nd", 10, "second operand").
+		AddIntVariadic("operands", 10, "list of operands").
+		ToGroup(&grp, func(operands ...int) {
+			var sb strings.Builder
+			var sum int
+
+			for i, op := range operands {
+				sum += op
+				sb.WriteString(fmt.Sprint(op))
+
+				if i+1 < len(operands) {
+					sb.WriteString(" + ")
+				}
+			}
+
+			sb.WriteString(fmt.Sprintf(" = %d (II)", sum))
+			fmt.Println(sb.String())
+
+		}); err != nil {
+		panic(err)
+	}
+
+	if grp.ExecuteAll(append([]string{"calc"}, os.Args[1:]...)) == 0 {
+		fmt.Fprintln(os.Stderr, "invalid command:", strings.Join(os.Args[1:], " "))
+	}
+}
+```
+
+```bash
+$ calc add 1
+invalid command: add 1
+
+$ calc add 1 2
+1 + 2 = 3 (I)
+1 + 2 = 3 (II)
+
+$ calc add 1 2 3
+1 + 2 + 3 = 6 (II)
+```
+
+Use `ExecuteFirst` if you want to stop executing commands after the first successful executed command, the method returns the index of the executed command within the group, [0, `len(group)`), or a negative value if no command was found: 
+
+```go
+func main() {
+	// ... same commands as before ...
+
+	if grp.ExecuteFirst(append([]string{"calc"}, os.Args[1:]...)) < 0 {
+		fmt.Fprintln(os.Stderr, "invalid command:", strings.Join(os.Args[1:], " "))
+	}
+}
+```
+
+```bash
+$ calc add 1 2
+1 + 2 = 3 (I)
 ```
 
 

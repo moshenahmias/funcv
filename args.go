@@ -152,3 +152,68 @@ func (v *defIntVar) WriteTo(w io.Writer) (int64, error) {
 func (v *defIntVar) String() string {
 	return fmt.Sprintf("[%s]", v.name)
 }
+
+type strVariadic struct {
+	name string
+	desc string
+}
+
+func (*strVariadic) Extract(args []string) ([]string, []interface{}, error) {
+	if len(args) == 0 {
+		return args, nil, nil
+	}
+
+	var params []interface{}
+
+	for _, arg := range args {
+		params = append(params, arg)
+	}
+
+	return nil, params, nil
+}
+
+func (v *strVariadic) WriteTo(w io.Writer) (int64, error) {
+	n, err := fmt.Fprintf(w, "\n\t%s...\t%s", v.name, v.desc)
+	return int64(n), err
+}
+
+func (v *strVariadic) String() string {
+	return fmt.Sprintf("[%s...]", v.name)
+}
+
+type intVariadic struct {
+	name string
+	base int
+	desc string
+}
+
+func (v *intVariadic) Extract(args []string) ([]string, []interface{}, error) {
+	if len(args) == 0 {
+		return args, nil, nil
+	}
+
+	conv := &IntegerConverter{v.base}
+
+	var params []interface{}
+
+	for i, arg := range args {
+		v, err := conv.Convert(arg)
+
+		if err != nil {
+			return args[i:], nil, err
+		}
+
+		params = append(params, v)
+	}
+
+	return nil, params, nil
+}
+
+func (v *intVariadic) WriteTo(w io.Writer) (int64, error) {
+	n, err := fmt.Fprintf(w, "\n\t%s...\t%s (base: %d)", v.name, v.desc, v.base)
+	return int64(n), err
+}
+
+func (v *intVariadic) String() string {
+	return fmt.Sprintf("[%s...]", v.name)
+}

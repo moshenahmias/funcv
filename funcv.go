@@ -39,10 +39,9 @@ type DefultedVariablesAdder interface {
 	AddIntVarWithDefault(name string, def, base int, desc string) DefultedVariablesBuilder
 }
 
-// ConstantAdder is used to add a constant to a command
+// ConstantAdder is used to add a constant to a command, constants
+// are a command unique identifiers and can be added anywhere
 type ConstantAdder interface {
-	// AddConstant argument, constants are a command unique
-	// identifiers and can be added anywhere
 	AddConstant(text string, insensitive bool) Builder
 }
 
@@ -74,15 +73,25 @@ type FlagsAdder interface {
 
 // ArgAdder is used to add custom arguments to a command
 type ArgAdder interface {
-	// AddArg can be used for adding a custom argument
-	// to the command
 	AddArg(arg Arg) Builder
+}
+
+// VariadicAdder is used to add zero or more arguments at the
+// end of a command
+type VariadicAdder interface {
+	// AddStrVariadic adds zero or more strings at the end
+	// of the command
+	AddStrVariadic(name, desc string) Compiler
+	// AddIntVariadic adds zero or more integers at the end
+	// of the command
+	AddIntVariadic(name string, base int, desc string) Compiler
 }
 
 // DefultedVariablesBuilder is a subset builder
 // for variable arguments with defaults
 type DefultedVariablesBuilder interface {
 	DefultedVariablesAdder
+	VariadicAdder
 	Compiler
 }
 
@@ -92,6 +101,7 @@ type FlagsBuilder interface {
 	ConstantAdder
 	VariablesAdder
 	DefultedVariablesAdder
+	VariadicAdder
 	Compiler
 }
 
@@ -102,6 +112,7 @@ type Builder interface {
 	ConstantAdder
 	VariablesAdder
 	DefultedVariablesAdder
+	VariadicAdder
 	Compiler
 }
 
@@ -125,31 +136,15 @@ type Compiler interface {
 // function to run
 type Command interface {
 	// Execute tests the supplied arguments against the
-	// command, if they are all compatible, the action function is
+	// command, if they are all valid, the action function is
 	// called with the extracted parameters and (len(args), nil) is
 	// returned, else, non-nil error is returned with the number of
-	// compatible arguments. the action function arguments
+	// valid arguments. the action function arguments
 	// need to be compatible with the command's arguments or else
 	// a non-nil error is returned
 	Execute(args []string, fn interface{}) (int, error)
 	io.WriterTo
 }
-
-/*
-// Group ties together multiple commands
-type Group interface {
-	// Add a command and an action function
-	// to the group
-	Add(cmd Command, fn interface{}) Group
-	// Execute tests the supplied arguments against all commands
-	// in the group, if some are compatible, the paired action function
-	// for each command is called with the extracted parameters,
-	// the number of called functions is returned, to be called, every
-	// function needs to be compatible with the command's arguments
-	Execute(args []string) int
-	io.WriterTo
-}
-*/
 
 // Arg represents a command argument
 type Arg interface {
