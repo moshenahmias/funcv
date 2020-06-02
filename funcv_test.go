@@ -185,7 +185,7 @@ func TestIntFlagDefault(t *testing.T) {
 }
 
 func TestBoolFlag(t *testing.T) {
-	c := NewCommand("").AddParameterlessFlag("b", "", new(BoolConverter), true, false).MustCompile()
+	c := NewCommand("").AddParameterlessFlag("b", "", new(BooleanConverter), true, false).MustCompile()
 
 	var v bool
 
@@ -203,7 +203,7 @@ func TestBoolFlag(t *testing.T) {
 }
 
 func TestBoolFlagDefault(t *testing.T) {
-	c := NewCommand("").AddParameterlessFlag("b", "", new(BoolConverter), true, false).MustCompile()
+	c := NewCommand("").AddParameterlessFlag("b", "", new(BooleanConverter), true, false).MustCompile()
 
 	var v = true
 
@@ -221,7 +221,7 @@ func TestBoolFlagDefault(t *testing.T) {
 }
 
 func TestBoolFlagWithFalseParam(t *testing.T) {
-	c := NewCommand("").AddParameterlessFlag("b", "", new(BoolConverter), true, false).MustCompile()
+	c := NewCommand("").AddParameterlessFlag("b", "", new(BooleanConverter), true, false).MustCompile()
 
 	_, err := c.Execute([]string{"-b", "false"}, func(a bool) {
 		if a {
@@ -235,7 +235,7 @@ func TestBoolFlagWithFalseParam(t *testing.T) {
 }
 
 func TestBoolFlagWithTrueParam(t *testing.T) {
-	c := NewCommand("").AddParameterlessFlag("b", "", new(BoolConverter), true, false).MustCompile()
+	c := NewCommand("").AddParameterlessFlag("b", "", new(BooleanConverter), true, false).MustCompile()
 
 	_, err := c.Execute([]string{"-b", "true"}, func(a bool) {
 		if !a {
@@ -249,7 +249,7 @@ func TestBoolFlagWithTrueParam(t *testing.T) {
 }
 
 func TestBoolFlagWithoutParam(t *testing.T) {
-	c := NewCommand("").AddParameterlessFlag("b", "", new(BoolConverter), true, false).MustCompile()
+	c := NewCommand("").AddParameterlessFlag("b", "", new(BooleanConverter), true, false).MustCompile()
 
 	_, err := c.Execute([]string{"-b"}, func(a bool) {
 		if !a {
@@ -318,7 +318,7 @@ func TestCombined(t *testing.T) {
 		AddConstant("test", false).
 		AddFlag("x", "", new(StringConverter), "xxx").
 		AddFlag("y", "", new(IntegerConverter), 111).
-		AddParameterlessFlag("z", "", new(BoolConverter), true, false).
+		AddParameterlessFlag("z", "", new(BooleanConverter), true, false).
 		AddVariable("v1", "", new(StringConverter)).
 		AddVariable("v2", "", new(IntegerConverter)).
 		AddVariableWithDefault("v3", "", new(StringConverter), "v3def").
@@ -368,7 +368,7 @@ func TestMissingFuncParams(t *testing.T) {
 		AddConstant("test", false).
 		AddFlag("x", "", new(StringConverter), "xxx").
 		AddFlag("y", "", new(IntegerConverter), 111).
-		AddParameterlessFlag("z", "", new(BoolConverter), true, false).
+		AddParameterlessFlag("z", "", new(BooleanConverter), true, false).
 		AddVariable("v1", "", new(StringConverter)).
 		AddVariable("v2", "", new(IntegerConverter)).
 		AddVariableWithDefault("v3", "", new(StringConverter), "v3def").
@@ -392,7 +392,7 @@ func TestNotAFunc(t *testing.T) {
 		AddConstant("test", false).
 		AddFlag("x", "", new(StringConverter), "xxx").
 		AddFlag("y", "", new(IntegerConverter), 111).
-		AddParameterlessFlag("z", "", new(BoolConverter), true, false).
+		AddParameterlessFlag("z", "", new(BooleanConverter), true, false).
 		AddVariable("v1", "", new(StringConverter)).
 		AddVariable("v2", "", new(IntegerConverter)).
 		AddVariableWithDefault("v3", "", new(StringConverter), "v3def").
@@ -603,7 +603,7 @@ func TestCompatibilityDegree004(t *testing.T) {
 }
 
 func TestCompatibilityDegree005(t *testing.T) {
-	c := NewCommand("").AddParameterlessFlag("b", "", new(BoolConverter), true, false).MustCompile()
+	c := NewCommand("").AddParameterlessFlag("b", "", new(BooleanConverter), true, false).MustCompile()
 	n, err := c.Execute([]string{"-b", "true"}, nil)
 
 	if err != nil {
@@ -775,19 +775,19 @@ func TestDefaultType003(t *testing.T) {
 }
 
 func TestDefaultType004(t *testing.T) {
-	if _, err := NewCommand("").AddParameterlessFlag("x", "", new(BoolConverter), true, false).Compile(); err != nil {
+	if _, err := NewCommand("").AddParameterlessFlag("x", "", new(BooleanConverter), true, false).Compile(); err != nil {
 		t.Fatal(err)
 	}
 }
 
 func TestDefaultType005(t *testing.T) {
-	if _, err := NewCommand("").AddParameterlessFlag("x", "", new(BoolConverter), 123, false).Compile(); err == nil {
+	if _, err := NewCommand("").AddParameterlessFlag("x", "", new(BooleanConverter), 123, false).Compile(); err == nil {
 		t.FailNow()
 	}
 }
 
 func TestDefaultType006(t *testing.T) {
-	if _, err := NewCommand("").AddParameterlessFlag("x", "", new(BoolConverter), true, "false").Compile(); err == nil {
+	if _, err := NewCommand("").AddParameterlessFlag("x", "", new(BooleanConverter), true, "false").Compile(); err == nil {
 		t.FailNow()
 	}
 }

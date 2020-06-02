@@ -56,15 +56,15 @@ func (*IntegerConverter) IsSupported(v interface{}) bool {
 	return reflect.TypeOf(v).ConvertibleTo(reflect.TypeOf(int64(0)))
 }
 
-// BoolConverter is used to convert string represented integer
+// BooleanConverter is used to convert string represented integer
 // arguments to integers, "true" is converted to true, "false"
 // is converted to false, it uses sensitive compare as default
-type BoolConverter struct {
+type BooleanConverter struct {
 	Insensitive bool // how to compare the input
 }
 
 // Convert the given argument to boolean
-func (c *BoolConverter) Convert(arg string) (interface{}, error) {
+func (c *BooleanConverter) Convert(arg string) (interface{}, error) {
 	if arg == "" {
 		return true, nil
 	}
@@ -97,6 +97,6 @@ func (c *BoolConverter) Convert(arg string) (interface{}, error) {
 }
 
 // IsSupported returns true if the given value is a boolean
-func (*BoolConverter) IsSupported(v interface{}) bool {
+func (*BooleanConverter) IsSupported(v interface{}) bool {
 	return reflect.TypeOf(v).Kind() == reflect.Bool
 }

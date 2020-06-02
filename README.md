@@ -69,7 +69,7 @@ func main() {
 	err := funcv.NewCommand("delete a file").
 		AddConstant("example", false).
 		AddConstant("delete", false).
-		AddParameterlessFlag("r", "move to recycle bin", new(funcv.StringConverter), false, true).
+		AddParameterlessFlag("r", "move to recycle bin", new(funcv.BooleanConverter), false, true).
 		AddVariable("filename", "file to delete", new(funcv.StringConverter)).
 		ToGroup(&grp, func(recycle bool, name string) {
 			// the count, order and type of params must match the count, order
