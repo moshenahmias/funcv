@@ -12,7 +12,7 @@ Let's see how it works with a simple example:
 func main() {
 	cmd := funcv.NewCommand("delete a file").
 		AddConstant("delete", false).
-		AddStrVar("filename", "file to delete").
+		AddVariable("filename", "file to delete", new(funcv.StringConverter)).
 		MustCompile()
 
 	if _, err := cmd.Execute(os.Args[1:], func(name string) {
