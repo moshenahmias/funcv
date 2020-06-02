@@ -791,3 +791,39 @@ func TestDefaultType006(t *testing.T) {
 		t.FailNow()
 	}
 }
+
+func TestFloatFlag000(t *testing.T) {
+	c := NewCommand("").AddFlag("x", "", new(FloatConverter), 0).MustCompile()
+
+	var v float64
+
+	_, err := c.Execute([]string{"-x", "1.234"}, func(a float64) {
+		v = a
+	})
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if v != 1.234 {
+		t.Fatal("wrong value", v)
+	}
+}
+
+func TestFloatFlag001(t *testing.T) {
+	c := NewCommand("").AddFlag("x", "", new(FloatConverter), 0).MustCompile()
+
+	var v int
+
+	_, err := c.Execute([]string{"-x", "1.2"}, func(a int) {
+		v = a
+	})
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if v != 1 {
+		t.Fatal("wrong value", v)
+	}
+}

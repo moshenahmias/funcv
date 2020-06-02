@@ -56,7 +56,7 @@ The list of supported arguments is extendable via the `funcv.Argument` interface
 
 Arguments that translates to function parameters (ex: not constant) require a `func.Converter`.
 
-The package includes converters for Strings, Integers and Booleans.
+The package includes converters for Strings, Integers, Floats and Booleans.
 
 ### Groups
 

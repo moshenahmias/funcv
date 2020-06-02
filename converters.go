@@ -100,3 +100,27 @@ func (c *BooleanConverter) Convert(arg string) (interface{}, error) {
 func (*BooleanConverter) IsSupported(v interface{}) bool {
 	return reflect.TypeOf(v).Kind() == reflect.Bool
 }
+
+// FloatConverter is used to convert string represented float
+// arguments to float
+type FloatConverter struct{}
+
+// Convert the given argument to float
+func (*FloatConverter) Convert(arg string) (interface{}, error) {
+	if arg == "" {
+		return nil, ErrInvalidValue
+	}
+
+	i, err := strconv.ParseFloat(arg, 64)
+
+	if err != nil {
+		return nil, fmt.Errorf("funcv: failed to parse float var %v (%w)", arg, err)
+	}
+
+	return i, nil
+}
+
+// IsSupported returns true if the given value is an interger
+func (*FloatConverter) IsSupported(v interface{}) bool {
+	return reflect.TypeOf(v).ConvertibleTo(reflect.TypeOf(float64(0)))
+}
