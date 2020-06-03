@@ -52,6 +52,7 @@ func (c *IntegerConverter) Convert(arg string) (interface{}, error) {
 }
 
 // IsSupported returns true if the given value is an interger
+// or can be converted to integer
 func (*IntegerConverter) IsSupported(v interface{}) bool {
 	return reflect.TypeOf(v).ConvertibleTo(reflect.TypeOf(int64(0)))
 }
@@ -97,6 +98,7 @@ func (c *BooleanConverter) Convert(arg string) (interface{}, error) {
 }
 
 // IsSupported returns true if the given value is a boolean
+// or can be converted to boolean
 func (*BooleanConverter) IsSupported(v interface{}) bool {
 	return reflect.TypeOf(v).Kind() == reflect.Bool
 }
@@ -120,7 +122,8 @@ func (*FloatConverter) Convert(arg string) (interface{}, error) {
 	return i, nil
 }
 
-// IsSupported returns true if the given value is an interger
+// IsSupported returns true if the given value is a float
+// or can be converted to float
 func (*FloatConverter) IsSupported(v interface{}) bool {
 	return reflect.TypeOf(v).ConvertibleTo(reflect.TypeOf(float64(0)))
 }

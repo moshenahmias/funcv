@@ -220,7 +220,16 @@ func (c *command) Execute(args []string, fn interface{}) (int, error) {
 		in = append(in, v.Convert(t))
 	}
 
-	vfn.Call(in)
+	ret := vfn.Call(in)
+
+	if len(ret) > 0 {
+
+		if r := ret[len(ret)-1].Interface(); r != nil {
+			if err, ok := r.(error); ok && err != nil {
+				return n, err
+			}
+		}
+	}
 
 	return n, nil
 }

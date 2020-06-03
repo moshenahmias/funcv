@@ -1,6 +1,7 @@
 package funcv
 
 import (
+	"errors"
 	"testing"
 )
 
@@ -825,5 +826,19 @@ func TestFloatFlag001(t *testing.T) {
 
 	if v != 1 {
 		t.Fatal("wrong value", v)
+	}
+}
+
+func TestErrReturn(t *testing.T) {
+	c := NewCommand("").AddConstant("test", false).MustCompile()
+
+	errfunc := errors.New("function error")
+
+	_, err := c.Execute([]string{"test"}, func() error {
+		return errfunc
+	})
+
+	if err != errfunc {
+		t.FailNow()
 	}
 }

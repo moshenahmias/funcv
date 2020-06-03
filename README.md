@@ -224,6 +224,49 @@ $ calc add 1 2
 
 
 
+### Action Function Returned Error
+
+If an action function returns an error (non-nil), that error will propagate through the command's `Execute` method:
+
+```go
+func main() {
+	var grp funcv.Group
+
+	if err := funcv.NewCommand("...").
+		AddConstant("run", false).
+		AddConstant("me", false).
+		ToGroup(&grp, func() error {
+			fmt.Println("1nd command")
+			return errors.New("...")
+		}); err != nil {
+		panic(err)
+	}
+
+	if err := funcv.NewCommand("...").
+		AddConstant("run", false).
+		AddConstant("me", false).
+		ToGroup(&grp, func() {
+			fmt.Println("2nd command")
+		}); err != nil {
+		panic(err)
+	}
+
+	if grp.ExecuteFirst(append([]string{"run"}, os.Args[1:]...)) < 0 {
+		fmt.Fprintln(os.Stderr, "invalid command:", strings.Join(os.Args[1:], " "))
+	}
+}
+```
+
+```bash
+$ run me
+1nd command
+2nd command
+```
+
+`ExecuteFirst` stops after the first successful command, if an action function returns an error, the execution is considered to be unsuccessful.
+
+
+
 ### Download
 
 ```bash

@@ -3,12 +3,13 @@ package funcv
 import (
 	"fmt"
 	"io"
+	"reflect"
 )
 
 // Pair of a command and an action function
 type Pair struct {
-	cmd Command
-	fn  interface{}
+	Cmd Command
+	Fn  interface{}
 }
 
 // Group of commands with binded action functions
@@ -20,13 +21,25 @@ func (g *Group) Add(cmd Command, fn interface{}) *Group {
 	return g
 }
 
+// Call the i's action function with the given parameters
+// invalid input will panic
+func (g *Group) Call(i int, params ...interface{}) {
+	var in []reflect.Value
+
+	for _, param := range params {
+		in = append(in, reflect.ValueOf(param))
+	}
+
+	reflect.ValueOf((*g)[i].Fn).Call(in)
+}
+
 // ExecuteAll tests the supplied arguments against all commands
 // in the group, if a suitable command found, the paired action
 // function is called with the extracted parameters, the number of
 // called functions is returned
 func (g *Group) ExecuteAll(args []string) (n int) {
 	for _, p := range *g {
-		if _, err := p.cmd.Execute(args, p.fn); err == nil {
+		if _, err := p.Cmd.Execute(args, p.Fn); err == nil {
 			n++
 		}
 	}
@@ -44,7 +57,7 @@ func (g *Group) ExecuteFirst(args []string) (i int) {
 	var p Pair
 
 	for i, p = range *g {
-		if _, err := p.cmd.Execute(args, p.fn); err == nil {
+		if _, err := p.Cmd.Execute(args, p.Fn); err == nil {
 			return
 		}
 	}
@@ -58,7 +71,7 @@ func (g *Group) WriteTo(w io.Writer) (int64, error) {
 	var written int64
 
 	for i, p := range *g {
-		if n, err := p.cmd.WriteTo(w); err == nil {
+		if n, err := p.Cmd.WriteTo(w); err == nil {
 			written += n
 		} else {
 			return written + n, err
