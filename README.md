@@ -24,10 +24,11 @@ func main() {
 }
 ```
 
-```bash
-$ example delete song.mp3 
+```console
+$ example delete song.mp3
 deleting song.mp3 ...
 ```
+
 
 First, we called the `funcv.NewCommand` function with a command description, then, we used the returned builder (`funcv.Builder`) to add our command components, a constant text ("delete") and a string variable ("filename"). The call for `MustCompile()` finished the building process and returned the new command (`failure.Command`).
 
@@ -113,7 +114,7 @@ func main() {
 }
 ```
 
-```bash
+```console
 $ example delete song.mp3 
 deleting song.mp3 ...
 
@@ -193,7 +194,7 @@ func main() {
 }
 ```
 
-```bash
+```console
 $ calc add 1
 invalid command: add 1
 
@@ -217,7 +218,7 @@ func main() {
 }
 ```
 
-```bash
+```console
 $ calc add 1 2
 1 + 2 = 3 (I)
 ```
@@ -257,7 +258,7 @@ func main() {
 }
 ```
 
-```bash
+```console
 $ run me
 1nd command
 2nd command
@@ -269,6 +270,6 @@ $ run me
 
 ### Download
 
-```bash
+```console
 $ go get -u github.com/moshenahmias/funcv
 ```
